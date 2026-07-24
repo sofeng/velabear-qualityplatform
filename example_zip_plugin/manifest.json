@@ -1,0 +1,27 @@
+{
+  "code": "example_zip_plugin",
+  "name": "文本分析工具",
+  "kind": "skill",
+  "description": "提供文本分析功能，包括词频统计、关键词提取等",
+  "version": "1.0.0",
+  "provider": "testhub",
+  "main": "text_analyzer.py",
+  "entrypoint": "analyze",
+  "tags": ["文本分析", "NLP", "工具"],
+  "risk_level": "low",
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "待分析的文本"
+      },
+      "mode": {
+        "type": "string",
+        "enum": ["word_count", "keyword_extract"],
+        "description": "分析模式"
+      }
+    },
+    "required": ["text"]
+  }
+}

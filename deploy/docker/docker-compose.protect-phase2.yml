@@ -1,0 +1,113 @@
+services:
+  testhub-mysql:
+    container_name: testhub-protect-p2-mysql
+    ports: !override
+      - "33506:3306"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-protect-phase2/mysql:/var/lib/mysql:z
+
+  testhub-redis:
+    container_name: testhub-protect-p2-redis
+    ports: !override
+      - "36579:6379"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-protect-phase2/redis:/data:z
+
+  testhub-backend-init:
+    image: local/testhub-platform-backend-protect-p2:latest
+    container_name: testhub-protect-p2-backend-init
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.protected.Dockerfile
+      args:
+        BACKEND_RUNTIME_BASE: local/testhub-platform-backend-runtime:latest
+        PYARMOR_VERSION: pyarmor
+        PYARMOR_OPTIONS: ""
+        PYARMOR_LICENSE_REQUIRED: "0"
+        PYARMOR_MAX_SCRIPT_BYTES: "30000"
+    environment:
+      CORS_ALLOWED_ORIGINS: http://localhost:42280,http://127.0.0.1:42280,http://host.docker.internal:42280
+      CSRF_TRUSTED_ORIGINS: http://localhost:42280,http://127.0.0.1:42280,http://host.docker.internal:42280
+      CODEX_RUNTIME_IMAGE: local/testhub-platform-codex-runtime-protect-p2:latest
+      CLAUDE_RUNTIME_IMAGE: local/testhub-platform-claude-runtime-protect-p2:latest
+      AI_SESSION_WORKSPACE_CODEX_ENABLED: "1"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-protect-phase2/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-protect-phase2/media:/app/media:z
+      - ../../.docker-data/testhub-platform-protect-phase2/static:/app/static:z
+      - ../../.docker-data/testhub-platform-protect-phase2/logs:/app/logs:z
+      - ../init-seed:/app/init-seed:ro,z
+
+  testhub-backend:
+    image: local/testhub-platform-backend-protect-p2:latest
+    container_name: testhub-protect-p2-backend
+    environment:
+      CORS_ALLOWED_ORIGINS: http://localhost:42280,http://127.0.0.1:42280,http://host.docker.internal:42280
+      CSRF_TRUSTED_ORIGINS: http://localhost:42280,http://127.0.0.1:42280,http://host.docker.internal:42280
+      PLAYWRIGHT_RECORDER_CDP_HOST_PORT: "59422"
+      PLAYWRIGHT_RECORDER_CDP_HOST_PORT_END: "59462"
+      PLAYWRIGHT_RECORDER_DEVTOOLS_EXTERNAL_ORIGIN: http://localhost:59422
+      PLAYWRIGHT_RECORDER_NOVNC_HOST_PORT: "56780"
+      PLAYWRIGHT_RECORDER_NOVNC_HOST_PORT_END: "56820"
+      PLAYWRIGHT_RECORDER_NOVNC_EXTERNAL_ORIGIN: http://localhost:56780
+      CODEX_RUNTIME_IMAGE: local/testhub-platform-codex-runtime-protect-p2:latest
+      CLAUDE_RUNTIME_IMAGE: local/testhub-platform-claude-runtime-protect-p2:latest
+      AI_SESSION_WORKSPACE_CODEX_ENABLED: "1"
+    ports: !override
+      - "58200:8000"
+      - "59422-59462:9222-9262"
+      - "127.0.0.1:56780-56820:6080-6120"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-protect-phase2/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-protect-phase2/media:/app/media:z
+      - ../../.docker-data/testhub-platform-protect-phase2/static:/app/static:z
+      - ../../.docker-data/testhub-platform-protect-phase2/logs:/app/logs:z
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../../playwright_snapshot:/app/playwright_snapshot
+
+  testhub-celery-worker:
+    image: local/testhub-platform-backend-protect-p2:latest
+    container_name: testhub-protect-p2-celery-worker
+    environment:
+      CORS_ALLOWED_ORIGINS: http://localhost:42280,http://127.0.0.1:42280,http://host.docker.internal:42280
+      CSRF_TRUSTED_ORIGINS: http://localhost:42280,http://127.0.0.1:42280,http://host.docker.internal:42280
+      CODEX_RUNTIME_IMAGE: local/testhub-platform-codex-runtime-protect-p2:latest
+      CLAUDE_RUNTIME_IMAGE: local/testhub-platform-claude-runtime-protect-p2:latest
+      AI_SESSION_WORKSPACE_CODEX_ENABLED: "1"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-protect-phase2/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-protect-phase2/media:/app/media:z
+      - ../../.docker-data/testhub-platform-protect-phase2/static:/app/static:z
+      - ../../.docker-data/testhub-platform-protect-phase2/logs:/app/logs:z
+      - ../../playwright_snapshot:/app/playwright_snapshot
+
+  testhub-ai-dev-worker:
+    image: local/testhub-platform-backend-protect-p2:latest
+    container_name: testhub-protect-p2-ai-dev-worker
+    environment:
+      CORS_ALLOWED_ORIGINS: http://localhost:42280,http://127.0.0.1:42280,http://host.docker.internal:42280
+      CSRF_TRUSTED_ORIGINS: http://localhost:42280,http://127.0.0.1:42280,http://host.docker.internal:42280
+      CODEX_RUNTIME_IMAGE: local/testhub-platform-codex-runtime-protect-p2:latest
+      CLAUDE_RUNTIME_IMAGE: local/testhub-platform-claude-runtime-protect-p2:latest
+      AI_SESSION_WORKSPACE_CODEX_ENABLED: "1"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-protect-phase2/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-protect-phase2/media:/app/media:z
+      - ../../.docker-data/testhub-platform-protect-phase2/static:/app/static:z
+      - ../../.docker-data/testhub-platform-protect-phase2/logs:/app/logs:z
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../../playwright_snapshot:/app/playwright_snapshot
+
+  testhub-frontend:
+    image: local/testhub-platform-frontend-protect-p2:latest
+    container_name: testhub-protect-p2-frontend
+    ports: !override
+      - "42280:80"
+
+  testhub-codex-runtime:
+    image: local/testhub-platform-codex-runtime-protect-p2:latest
+    container_name: testhub-protect-p2-codex-runtime
+
+  testhub-claude-runtime:
+    image: local/testhub-platform-claude-runtime-protect-p2:latest
+    container_name: testhub-protect-p2-claude-runtime

@@ -1,0 +1,1137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BearAI 会话开发功能 · 产品操作手册</title>
+  <style>
+    .bearai-manual {
+      --bm-ink: #0f1e33;
+      --bm-text: #26384f;
+      --bm-muted: #5f7189;
+      --bm-line: #dce4ee;
+      --bm-soft: #f4f7fb;
+      --bm-panel: #ffffff;
+      --bm-blue: #1456f0;
+      --bm-blue-soft: #eef4ff;
+      --bm-green: #07845f;
+      --bm-green-soft: #e8f7f1;
+      --bm-amber: #a25d12;
+      --bm-amber-soft: #fff4e5;
+      --bm-red: #b42318;
+      --bm-red-soft: #fdefec;
+      --bm-purple: #6234c9;
+      --bm-purple-soft: #f0ebff;
+    }
+
+    .bearai-manual * { box-sizing: border-box; }
+
+    .bearai-manual {
+      margin: 0;
+      background: #eef3f8;
+      color: var(--bm-text);
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+      line-height: 1.75;
+      font-size: 15px;
+    }
+
+    .bearai-manual a { color: var(--bm-blue); text-decoration: none; }
+    .bearai-manual a:hover { text-decoration: underline; }
+
+    .bm-shell {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      max-width: 1560px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: var(--bm-panel);
+    }
+
+    /* ── Sidebar ─────────────────────────────── */
+    .bm-nav {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      padding: 26px 20px 40px;
+      border-right: 1px solid var(--bm-line);
+      background: #f9fbfd;
+      overflow-y: auto;
+    }
+
+    .bm-nav__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 18px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--bm-line);
+    }
+
+    .bm-nav__logo {
+      width: 40px; height: 40px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #1456f0, #6234c9);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .bm-nav__brand strong { display: block; color: var(--bm-ink); font-size: 16px; line-height: 1.3; }
+    .bm-nav__brand span { display: block; margin-top: 3px; color: var(--bm-muted); font-size: 12px; }
+
+    .bm-nav__group-title {
+      margin: 18px 0 6px;
+      padding: 0 8px;
+      color: #9aa7b8;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .bm-nav a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 7px;
+      color: #34465c;
+      font-size: 13.5px;
+      line-height: 1.4;
+    }
+    .bm-nav a:hover { background: #edf3fb; text-decoration: none; }
+    .bm-nav a .bm-nav__num {
+      display: inline-block;
+      width: 22px;
+      color: #9aa7b8;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Content ─────────────────────────────── */
+    .bm-content { min-width: 0; padding: 40px 52px 80px; }
+
+    .bm-hero {
+      padding: 6px 0 28px;
+      border-bottom: 1px solid var(--bm-line);
+    }
+    .bm-kicker {
+      display: inline-block;
+      margin: 0 0 14px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--bm-blue-soft);
+      color: var(--bm-blue);
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+    .bm-hero h1 {
+      margin: 0;
+      color: var(--bm-ink);
+      font-size: 36px;
+      line-height: 1.22;
+      font-weight: 800;
+    }
+    .bm-hero p {
+      max-width: 940px;
+      margin: 16px 0 0;
+      color: var(--bm-muted);
+      font-size: 15.5px;
+    }
+    .bm-meta {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 22px;
+    }
+    .bm-pill {
+      display: inline-flex; align-items: center;
+      min-height: 30px; padding: 5px 12px;
+      border: 1px solid #cbd8e6; border-radius: 999px;
+      background: #fff; color: #3a4d63;
+      font-size: 12px; font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .bm-section { padding: 44px 0 0; scroll-margin-top: 20px; }
+    .bm-section > h2 {
+      margin: 0 0 6px;
+      color: var(--bm-ink);
+      font-size: 26px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+    .bm-section__no {
+      color: var(--bm-blue);
+      font-weight: 800;
+      margin-right: 10px;
+    }
+    .bm-section h3 {
+      margin: 30px 0 10px;
+      color: var(--bm-ink);
+      font-size: 19px;
+      font-weight: 700;
+    }
+    .bm-section h4 {
+      margin: 22px 0 8px;
+      color: var(--bm-ink);
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .bm-section p { margin: 0 0 12px; }
+    .bm-lede { max-width: 1000px; color: var(--bm-muted); font-size: 15.5px; }
+
+    /* ── Cards / grid ────────────────────────── */
+    .bm-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+    .bm-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bm-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .bm-card {
+      border: 1px solid var(--bm-line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 16px 18px;
+    }
+    .bm-card h4 { margin: 0 0 8px; color: var(--bm-ink); font-size: 15.5px; }
+    .bm-card p { margin: 0; color: var(--bm-muted); font-size: 13.5px; line-height: 1.65; }
+    .bm-card__icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; margin-bottom: 10px;
+      border-radius: 9px; font-size: 17px;
+      background: var(--bm-blue-soft); color: var(--bm-blue);
+    }
+
+    /* ── Steps ───────────────────────────────── */
+    .bm-steps {
+      counter-reset: bm-step;
+      display: grid; gap: 12px;
+      margin: 20px 0 0; padding: 0; list-style: none;
+    }
+    .bm-steps li {
+      counter-increment: bm-step;
+      position: relative;
+      padding: 16px 18px 16px 58px;
+      border: 1px solid var(--bm-line);
+      border-radius: 10px;
+      background: #fff;
+    }
+    .bm-steps li::before {
+      content: counter(bm-step);
+      position: absolute; left: 18px; top: 16px;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--bm-blue); color: #fff;
+      text-align: center; font-size: 13px; font-weight: 700; line-height: 26px;
+    }
+    .bm-steps strong { display: block; margin-bottom: 4px; color: var(--bm-ink); }
+    .bm-steps span { display: block; color: var(--bm-muted); font-size: 13.5px; }
+
+    /* ── Tables ──────────────────────────────── */
+    .bm-table {
+      width: 100%;
+      margin-top: 18px;
+      border-collapse: collapse;
+      border: 1px solid var(--bm-line);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+    .bm-table th, .bm-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--bm-line);
+      vertical-align: top;
+      text-align: left;
+    }
+    .bm-table th { background: #f4f8fc; color: var(--bm-ink); font-weight: 700; white-space: nowrap; }
+    .bm-table tr:last-child td { border-bottom: 0; }
+    .bm-table td { color: #40536a; }
+    .bm-table code { white-space: nowrap; }
+
+    /* ── Figure ──────────────────────────────── */
+    .bm-figure {
+      margin: 20px 0 8px;
+      border: 1px solid var(--bm-line);
+      border-radius: 10px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .bm-figure img { display: block; width: 100%; height: auto; background: #f7f9fc; }
+    .bm-figure figcaption {
+      padding: 10px 15px;
+      border-top: 1px solid var(--bm-line);
+      color: var(--bm-muted);
+      font-size: 12.5px; line-height: 1.6;
+    }
+
+    /* ── Callout ─────────────────────────────── */
+    .bm-callout {
+      margin: 18px 0;
+      padding: 14px 16px 14px 18px;
+      border-left: 4px solid var(--bm-blue);
+      border-radius: 8px;
+      background: var(--bm-blue-soft);
+      color: #2b4059;
+      font-size: 14px;
+    }
+    .bm-callout strong { color: var(--bm-ink); }
+    .bm-callout--warn { border-left-color: var(--bm-amber); background: var(--bm-amber-soft); }
+    .bm-callout--ok { border-left-color: var(--bm-green); background: var(--bm-green-soft); }
+    .bm-callout--danger { border-left-color: var(--bm-red); background: var(--bm-red-soft); }
+
+    /* ── Lists ───────────────────────────────── */
+    .bm-list { margin: 10px 0 0; padding-left: 22px; }
+    .bm-list li { margin: 7px 0; color: #40536a; }
+
+    /* ── Tags ────────────────────────────────── */
+    .bm-tag {
+      display: inline-flex; align-items: center;
+      margin: 0 6px 6px 0; padding: 3px 9px;
+      border-radius: 6px;
+      background: var(--bm-blue-soft); color: #184eaf;
+      font-size: 12px; font-weight: 700;
+    }
+    .bm-tag--green { background: var(--bm-green-soft); color: var(--bm-green); }
+    .bm-tag--amber { background: var(--bm-amber-soft); color: var(--bm-amber); }
+    .bm-tag--red { background: var(--bm-red-soft); color: var(--bm-red); }
+    .bm-tag--purple { background: var(--bm-purple-soft); color: var(--bm-purple); }
+
+    /* ── Chain flow ──────────────────────────── */
+    .bm-chain {
+      display: flex; flex-wrap: wrap; align-items: stretch;
+      gap: 8px; margin: 20px 0;
+    }
+    .bm-chain__node {
+      flex: 1 1 150px;
+      min-width: 150px;
+      padding: 12px 14px;
+      border: 1px solid var(--bm-line);
+      border-radius: 10px;
+      background: #fff;
+      position: relative;
+    }
+    .bm-chain__node b {
+      display: block; color: var(--bm-ink);
+      font-size: 14px; margin-bottom: 4px;
+    }
+    .bm-chain__node small { color: var(--bm-muted); font-size: 12px; line-height: 1.5; }
+    .bm-chain__node em {
+      display: inline-block; margin-bottom: 6px;
+      font-style: normal; font-size: 11px; font-weight: 700;
+      color: var(--bm-blue);
+    }
+
+    /* ── Status legend ───────────────────────── */
+    .bm-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 2px 10px; border-radius: 999px;
+      font-size: 12.5px; font-weight: 700;
+    }
+    .bm-status::before { content: ''; width: 8px; height: 8px; border-radius: 50%; }
+    .bm-status--done { background: var(--bm-green-soft); color: var(--bm-green); }
+    .bm-status--done::before { background: var(--bm-green); }
+    .bm-status--run { background: var(--bm-blue-soft); color: var(--bm-blue); }
+    .bm-status--run::before { background: var(--bm-blue); }
+    .bm-status--fail { background: var(--bm-red-soft); color: var(--bm-red); }
+    .bm-status--fail::before { background: var(--bm-red); }
+    .bm-status--wait { background: #eef1f5; color: #64748b; }
+    .bm-status--wait::before { background: #94a3b8; }
+
+    /* ── Toolbar mock ────────────────────────── */
+    .bm-toolbar {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin: 16px 0;
+      padding: 12px 14px;
+      border: 1px solid var(--bm-line);
+      border-radius: 10px;
+      background: var(--bm-soft);
+    }
+    .bm-toolbar__btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 12px;
+      border: 1px solid var(--bm-line);
+      border-radius: 999px;
+      background: #fff;
+      font-size: 12.5px; color: #3a4d63; font-weight: 600;
+    }
+    .bm-toolbar__btn i { font-style: normal; font-size: 14px; }
+
+    .bm-section code {
+      padding: 1px 6px;
+      border-radius: 5px;
+      background: #eef2f7;
+      color: #1b3f72;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 0.9em;
+    }
+
+    .bm-footer {
+      margin-top: 52px;
+      padding-top: 22px;
+      border-top: 1px solid var(--bm-line);
+      color: var(--bm-muted);
+      font-size: 12.5px;
+    }
+
+    .bm-anchor-top {
+      position: fixed; right: 26px; bottom: 26px;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--bm-ink); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; text-decoration: none;
+      box-shadow: 0 8px 20px rgba(15, 30, 51, 0.25);
+    }
+    .bm-anchor-top:hover { text-decoration: none; opacity: 0.9; }
+
+    @media (max-width: 1180px) {
+      .bm-shell { grid-template-columns: 1fr; }
+      .bm-nav {
+        position: relative; height: auto;
+        border-right: 0; border-bottom: 1px solid var(--bm-line);
+      }
+      .bm-content { padding: 32px 26px 60px; }
+      .bm-grid, .bm-grid--2, .bm-grid--4 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .bm-content { padding: 26px 16px 48px; }
+      .bm-hero h1 { font-size: 27px; }
+      .bm-section > h2 { font-size: 21px; }
+      .bm-table { display: block; overflow-x: auto; white-space: nowrap; }
+    }
+
+    @media print {
+      .bearai-manual { background: #fff; }
+      .bm-shell { display: block; max-width: none; }
+      .bm-nav, .bm-anchor-top { display: none; }
+      .bm-content { padding: 0; }
+      .bm-section, .bm-figure, .bm-card, .bm-steps li { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="bearai-manual">
+    <div class="bm-shell">
+      <!-- ═══════════ 目录 ═══════════ -->
+      <aside class="bm-nav" aria-label="操作手册目录">
+        <div class="bm-nav__brand">
+          <div class="bm-nav__logo">B</div>
+          <div>
+            <strong>BearAI 会话开发</strong>
+            <span>产品操作手册 · V1</span>
+          </div>
+        </div>
+        <nav>
+          <div class="bm-nav__group-title">开始了解</div>
+          <a href="#intro"><span class="bm-nav__num">01</span>产品是什么</a>
+          <a href="#concepts"><span class="bm-nav__num">02</span>核心概念速览</a>
+          <a href="#entry"><span class="bm-nav__num">03</span>进入 AI 产品入口</a>
+
+          <div class="bm-nav__group-title">选择与配置</div>
+          <a href="#session-types"><span class="bm-nav__num">04</span>会话类型详解</a>
+          <a href="#composer"><span class="bm-nav__num">05</span>输入区配置项</a>
+          <a href="#quickstart"><span class="bm-nav__num">06</span>五分钟快速上手</a>
+
+          <div class="bm-nav__group-title">会话工作区</div>
+          <a href="#chain"><span class="bm-nav__num">07</span>研发链路与状态</a>
+          <a href="#workspace"><span class="bm-nav__num">08</span>会话详情工作区</a>
+          <a href="#clarification"><span class="bm-nav__num">09</span>需求澄清操作</a>
+          <a href="#analysis"><span class="bm-nav__num">10</span>基线分析与业务逻辑</a>
+          <a href="#prototype"><span class="bm-nav__num">11</span>原型与测试设计</a>
+          <a href="#design"><span class="bm-nav__num">12</span>设计风格</a>
+          <a href="#preview"><span class="bm-nav__num">13</span>产品预览与代码</a>
+
+          <div class="bm-nav__group-title">进阶与运维</div>
+          <a href="#toolbox"><span class="bm-nav__num">14</span>工具箱能力</a>
+          <a href="#references"><span class="bm-nav__num">15</span>文件与研发对象</a>
+          <a href="#acceptance"><span class="bm-nav__num">16</span>结果验收清单</a>
+          <a href="#faq"><span class="bm-nav__num">17</span>常见问题</a>
+          <a href="#glossary"><span class="bm-nav__num">18</span>术语表</a>
+        </nav>
+      </aside>
+
+      <!-- ═══════════ 正文 ═══════════ -->
+      <article class="bm-content">
+        <header class="bm-hero">
+          <span class="bm-kicker">BearAI · 企业级 AI 会话开发平台</span>
+          <h1>AI 会话开发功能<br>产品操作手册</h1>
+          <p>
+            本手册面向业务人员、产品经理、需求分析师、测试工程师和研发人员，手把手说明如何在 BearAI 平台的
+            「AI 产品」入口，从一句话想法出发，经过项目澄清、需求澄清、基线分析、业务逻辑、原型、测试设计、设计风格，
+            直到生成可预览、可交付的应用。按本手册操作即可独立完成 AI 会话开发的完整流程。
+            （本手册不包含「思源质量分析」模块。）
+          </p>
+          <div class="bm-meta">
+            <span class="bm-pill">入口菜单：AI 产品</span>
+            <span class="bm-pill">会话类型：5 种</span>
+            <span class="bm-pill">工作区页签：10 个</span>
+            <span class="bm-pill">研发链路：7 个阶段</span>
+            <span class="bm-pill">适用版本：BearAI 当前版本</span>
+          </div>
+        </header>
+
+        <!-- 01 产品是什么 -->
+        <section id="intro" class="bm-section">
+          <h2><span class="bm-section__no">01</span>产品是什么</h2>
+          <p class="bm-lede">
+            BearAI 的「AI 会话开发」不是一个普通的聊天窗口，而是围绕真实软件研发过程组织的 AI 工作台。
+            你输入的每一句需求、上传的每一个文件、AI 产出的每一份需求条目 / 业务逻辑图 / 原型 / 测试用例 / 代码，
+            都会被绑定到同一个「会话」中，可以随时回看、复用和验收。
+          </p>
+          <div class="bm-grid">
+            <section class="bm-card">
+              <div class="bm-card__icon">💬</div>
+              <h4>一句话即可开始</h4>
+              <p>不需要先写完整 PRD。你可以从一句话、一个用户故事、一份已有原型或普通对话开始，平台会帮你逐步补全。</p>
+            </section>
+            <section class="bm-card">
+              <div class="bm-card__icon">🔗</div>
+              <h4>全链路可追溯</h4>
+              <p>平台按「项目澄清 → 需求澄清 → 需求分析 → 业务逻辑 → 原型 → 测试 → 实现」组织流程，每一步产物都能被下一步复用。</p>
+            </section>
+            <section class="bm-card">
+              <div class="bm-card__icon">✅</div>
+              <h4>可验收可交付</h4>
+              <p>会话详情页保留需求基线、业务逻辑、原型、测试设计、设计风格、代码和运行预览，便于验收、交接和二次迭代。</p>
+            </section>
+          </div>
+          <div class="bm-callout">
+            <strong>一句话记住它：</strong>把 AI 会话当成一个「有记忆、有产物、有流程」的研发助理，而不是一次性问答的聊天机器人。
+          </div>
+        </section>
+
+        <!-- 02 核心概念 -->
+        <section id="concepts" class="bm-section">
+          <h2><span class="bm-section__no">02</span>核心概念速览</h2>
+          <p class="bm-lede">在动手前，先花两分钟认识 6 个贯穿全程的概念，后面的每一步操作都会用到它们。</p>
+          <table class="bm-table">
+            <thead>
+              <tr><th style="width:130px">概念</th><th>它是什么</th><th>你会在哪里用到</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>会话</strong></td>
+                <td>一次完整的 AI 研发过程的载体，包含你的输入、AI 的产物和所有配置。每个会话有唯一 ID。</td>
+                <td>在「AI 产品」页发送需求后自动创建；后续所有操作都在这个会话内进行。</td>
+              </tr>
+              <tr>
+                <td><strong>会话类型</strong></td>
+                <td>决定这次会话在什么场景下开启、走多深的自动化流程。共 5 种（见第 04 节）。</td>
+                <td>输入区左下角「会话类型」按钮选择，是决定体验的最关键选项。</td>
+              </tr>
+              <tr>
+                <td><strong>会话环境</strong></td>
+                <td>AI 实际运行、生成代码和文件的执行环境。默认使用「本地会话环境」。</td>
+                <td>输入区「会话环境」按钮选择。</td>
+              </tr>
+              <tr>
+                <td><strong>模型</strong></td>
+                <td>驱动会话的大模型或 Codex CLI 引擎，决定生成质量与能力。</td>
+                <td>输入区「模型选择」按钮选择。</td>
+              </tr>
+              <tr>
+                <td><strong>工具箱能力</strong></td>
+                <td>可挂载到会话的专业能力：Prompt / Skill / Agent / Flow / MCP / Tool（见第 14 节）。</td>
+                <td>输入区「工具箱能力」按钮按需勾选。</td>
+              </tr>
+              <tr>
+                <td><strong>产物（基线 / 工作区文件）</strong></td>
+                <td>AI 产出并沉淀下来的结构化结果，如需求基线、业务逻辑图、原型、测试用例、代码。</td>
+                <td>会话详情页的各个工作区页签中查看与验收。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 03 进入入口 -->
+        <section id="entry" class="bm-section">
+          <h2><span class="bm-section__no">03</span>进入 AI 产品入口</h2>
+          <p class="bm-lede">
+            AI 会话开发的统一入口是左侧导航的「<strong>AI 产品</strong>」页面。进入后你会看到顶部的需求输入区，以及下方已有产品会话的卡片列表。
+          </p>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/01-ai-product-entry.png" alt="AI 产品入口页">
+            <figcaption>「AI 产品」入口页：顶部为需求输入区（几句话即可生成产品），下方为「产品」卡片列表，可按会话类型分类查看历史会话。</figcaption>
+          </figure>
+          <ol class="bm-steps">
+            <li>
+              <strong>打开「AI 产品」页面</strong>
+              <span>在平台左侧导航进入「AI 产品」。首次进入需确保已登录，页面会自动加载可用的会话环境、模型和历史产品。</span>
+            </li>
+            <li>
+              <strong>认识输入区</strong>
+              <span>页面中央是一个大输入框，下方一排圆形按钮就是本次会话的全部配置项（环境、模型、会话类型、工具箱、文件、研发对象）。</span>
+            </li>
+            <li>
+              <strong>查看已有产品</strong>
+              <span>输入区下方按「全部 / 一句话生成应用 / 一句话需求 / 从需求澄清开始 / 已有原型图 / 对话」分类展示历史会话卡片，可直接点击进入继续。</span>
+            </li>
+          </ol>
+          <div class="bm-callout bm-callout--warn">
+            <strong>安全提示：</strong>AI 产品体验环境请勿上传或生成涉密、敏感、商业机密内容。如需安全处理企业数据，请在「本地会话环境」中操作。
+          </div>
+        </section>
+
+        <!-- 04 会话类型 -->
+        <section id="session-types" class="bm-section">
+          <h2><span class="bm-section__no">04</span>会话类型详解（最关键的一步）</h2>
+          <p class="bm-lede">
+            「会话类型」代表<strong>不同场景下开启的会话</strong>：它决定了你的输入成熟度、平台自动化的深度，以及会话打开后默认进入的工作区。
+            选对类型能大幅减少后续澄清成本。点击输入区左下角的「会话类型」按钮即可切换，共 5 种。
+          </p>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/02-session-type-menu.png" alt="会话类型选择菜单">
+            <figcaption>「会话类型」下拉菜单：对话 / 一句话需求 / 一句话生成应用 / 从需求澄清开始 / 已有原型图，√ 表示当前选中。</figcaption>
+          </figure>
+
+          <table class="bm-table">
+            <thead>
+              <tr>
+                <th style="width:150px">会话类型</th>
+                <th>适合谁 / 什么时候用</th>
+                <th>典型输入</th>
+                <th>平台会做什么</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="bm-tag bm-tag--purple">对话</span></td>
+                <td>需要探索、咨询、分析资料、临时调用某个能力的用户。</td>
+                <td>一个问题、一段资料、一个文件、一段代码。</td>
+                <td>保持通用 AI 对话，可手动选择 Prompt / Skill / Agent / MCP / 文件 / 研发对象作为上下文，不强制走研发链路。</td>
+              </tr>
+              <tr>
+                <td><span class="bm-tag">一句话需求</span></td>
+                <td>只有一个用户故事或业务问题，但需要专业需求分析结果的人。</td>
+                <td>「作为客服主管，我希望看到超时未处理的反馈，以便及时催办。」</td>
+                <td>先把故事拆成角色、目标、业务对象、规则、异常和验收标准，沉淀为需求澄清与基线分析，再继续后续链路。</td>
+              </tr>
+              <tr>
+                <td><span class="bm-tag bm-tag--green">一句话生成应用</span></td>
+                <td>希望快速得到可运行产品的业务负责人、售前、产品经理。</td>
+                <td>「做一个客户反馈管理系统，支持提交反馈、客服处理、分类统计。」</td>
+                <td><strong>自动串联全链路</strong>：项目澄清 → 需求澄清 → 基线需求分析 → 基线业务逻辑 → 原型 → 测试分析 → 产品实现，中途无需人工干预。</td>
+              </tr>
+              <tr>
+                <td><span class="bm-tag bm-tag--amber">从需求澄清开始</span></td>
+                <td>已有初步需求说明，想跳过从零发散、直接进入确认与基线化的需求人员。</td>
+                <td>需求片段、会议纪要、待确认需求清单。</td>
+                <td>直接进入需求澄清工作区，围绕需求条目打磨、重写、接受 / 不接受，再生成脑图、业务逻辑、原型和测试。</td>
+              </tr>
+              <tr>
+                <td><span class="bm-tag bm-tag--red">已有原型图</span></td>
+                <td>已有 Axure、HTML 原型、截图或页面说明的产品 / 交互人员。</td>
+                <td>原型 ZIP、HTML、截图、页面目录或交互说明。</td>
+                <td>优先从原型解析页面、组件、入口、状态和业务流，再生成原型需求分析、测试分析和业务逻辑。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="bm-callout">
+            <strong>怎么选？一句话决策：</strong>
+            只想咨询 → <b>对话</b>；只有一句故事 → <b>一句话需求</b>；想最快产出系统 → <b>一句话生成应用</b>；已有需求文字 → <b>从需求澄清开始</b>；已有原型 → <b>已有原型图</b>。
+          </div>
+        </section>
+
+        <!-- 05 输入区配置项 -->
+        <section id="composer" class="bm-section">
+          <h2><span class="bm-section__no">05</span>输入区配置项逐个说明</h2>
+          <p class="bm-lede">
+            输入框下方那一排圆形按钮，就是本次会话发送前的全部配置。下面按从左到右的顺序逐个说明，其中前三项（环境、模型、会话类型）通常保持默认即可。
+          </p>
+
+          <div class="bm-toolbar" aria-label="输入区按钮示意">
+            <span class="bm-toolbar__btn"><i>🖥️</i>会话环境</span>
+            <span class="bm-toolbar__btn"><i>⚙️</i>模型选择</span>
+            <span class="bm-toolbar__btn"><i>🔑</i>授权类型<small style="color:#94a3b8">*仅 Codex</small></span>
+            <span class="bm-toolbar__btn"><i>⏱️</i>速度<small style="color:#94a3b8">*仅 Codex</small></span>
+            <span class="bm-toolbar__btn"><i>💬</i>会话类型</span>
+            <span class="bm-toolbar__btn"><i>🧰</i>工具箱能力</span>
+            <span class="bm-toolbar__btn"><i>📁</i>选择文件</span>
+            <span class="bm-toolbar__btn"><i>🔗</i>选择 AI 研发对象</span>
+            <span class="bm-toolbar__btn" style="background:#1456f0;color:#fff;border-color:#1456f0"><i>➤</i>生成 / 发送</span>
+          </div>
+
+          <table class="bm-table">
+            <thead>
+              <tr><th style="width:150px">按钮</th><th>作用</th><th>建议</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>🖥️ <strong>会话环境</strong></td>
+                <td>选择 AI 运行、生成代码和文件的执行环境。默认「本地会话环境（local-default）」。</td>
+                <td>一般保持默认。处理企业敏感数据时务必使用本地环境。</td>
+              </tr>
+              <tr>
+                <td>⚙️ <strong>模型选择</strong></td>
+                <td>选择驱动会话的模型引擎。列表中包含普通大模型和 Codex CLI 类模型（用于真实生成代码 / 应用）。</td>
+                <td>做「生成应用 / 原型 / 代码」类任务时优先选 Codex CLI 类模型；纯问答可用普通模型。</td>
+              </tr>
+              <tr>
+                <td>🔑 <strong>授权类型</strong></td>
+                <td><em>仅在选中 Codex 模型时出现。</em>可选 API Key / ChatGPT 登录 / Access Token，决定 Codex 用哪种凭据。</td>
+                <td>按平台管理员配置的凭据方式选择，默认 API Key。</td>
+              </tr>
+              <tr>
+                <td>⏱️ <strong>速度</strong></td>
+                <td><em>仅在选中 Codex 模型时出现。</em>可选 快速 / 均衡 / 深入 / 最强，越往后思考越充分、耗时越长、质量越高。</td>
+                <td>探索性任务用「均衡」，重要交付用「深入 / 最强」。</td>
+              </tr>
+              <tr>
+                <td>💬 <strong>会话类型</strong></td>
+                <td>本次会话的场景类型，共 5 种（见第 04 节）。<strong>最重要的选项。</strong></td>
+                <td>务必按你的输入成熟度正确选择。</td>
+              </tr>
+              <tr>
+                <td>🧰 <strong>工具箱能力</strong></td>
+                <td>按 Prompt / Skill / Agent / Flow / MCP / Tool 分组勾选本轮要启用的专业能力，右上角数字为已选数量。</td>
+                <td>按需选择，避免一次挂载过多导致上下文过载（见第 14 节）。</td>
+              </tr>
+              <tr>
+                <td>📁 <strong>选择文件</strong></td>
+                <td>附带本地文件作为上下文。支持 PDF / Word / TXT / MD / HTML / 图片 / ZIP / Excel / PPT 等，单次最多 6 个。</td>
+                <td>需求文档、原型 ZIP、参考资料都可上传，平台会自动提取文本。</td>
+              </tr>
+              <tr>
+                <td>🔗 <strong>选择 AI 研发对象</strong></td>
+                <td>把已有会话的工作区产物（项目基线、需求、原型、测试、代码等）作为本轮上下文引用。</td>
+                <td>做二次迭代或跨会话复用时非常有用（见第 15 节）。</td>
+              </tr>
+              <tr>
+                <td>➤ <strong>生成 / 发送</strong></td>
+                <td>创建会话并进入会话详情页开始执行。需已填写内容、选好环境和模型才可点击。</td>
+                <td>也可在输入框中按 Enter 直接发送。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="bm-callout bm-callout--ok">
+            <strong>已选中的配置会以「标签」形式显示在输入框下方，</strong>每个标签右侧有 × 可随时移除，发送前可再次确认。
+          </div>
+        </section>
+
+        <!-- 06 快速上手 -->
+        <section id="quickstart" class="bm-section">
+          <h2><span class="bm-section__no">06</span>五分钟快速上手</h2>
+          <p class="bm-lede">以「一句话生成应用」为例，走一遍从想法到可预览应用的最短路径。其它会话类型步骤类似，只是自动化深度不同。</p>
+          <ol class="bm-steps">
+            <li>
+              <strong>进入「AI 产品」并输入需求</strong>
+              <span>在输入框中描述要生成的软件，例如：<em>「做一个客户反馈管理系统，支持提交反馈、客服处理、分类统计」</em>。需求越具体（业务对象、角色、动作、统计目标），后续澄清越少。</span>
+            </li>
+            <li>
+              <strong>选择会话类型为「一句话生成应用」</strong>
+              <span>点击「会话类型」按钮选中它。此类型会自动串联整条研发链路。</span>
+            </li>
+            <li>
+              <strong>确认环境与模型</strong>
+              <span>会话环境保持「本地会话环境」；模型建议选择 Codex CLI 类模型，并按需设置授权类型与速度。</span>
+            </li>
+            <li>
+              <strong>点击「生成」发送</strong>
+              <span>平台会创建会话并自动跳转到会话详情页（CodexChat 工作区），开始逐阶段执行。</span>
+            </li>
+            <li>
+              <strong>观察左侧研发链路执行</strong>
+              <span>会话详情页左侧会依次显示项目澄清、需求澄清、基线分析、业务逻辑、原型、测试、产品实现各阶段的执行状态（进行中 / 完成 / 失败）。</span>
+            </li>
+            <li>
+              <strong>按产物验收</strong>
+              <span>切到右侧各工作区页签，先确认需求澄清和业务逻辑是否符合真实业务，再看原型、测试设计、设计风格，最后在「产品预览」查看可运行结果。</span>
+            </li>
+          </ol>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/03-one-click-app-input.png" alt="一句话生成应用输入示意">
+            <figcaption>输入一句话应用需求并选择「一句话生成应用」后，平台会创建 AI 会话并进入全链路自动执行。</figcaption>
+          </figure>
+        </section>
+
+        <!-- 07 研发链路 -->
+        <section id="chain" class="bm-section">
+          <h2><span class="bm-section__no">07</span>研发链路与执行状态</h2>
+          <p class="bm-lede">
+            无论哪种研发型会话类型，平台背后都遵循同一条研发链路。理解这条链路，你就知道每一步在做什么、产出什么、以及从哪里验收。
+          </p>
+
+          <div class="bm-chain">
+            <div class="bm-chain__node"><em>阶段 1</em><b>项目澄清</b><small>确定项目范围、角色、业务对象、规则、风险与研发输入。</small></div>
+            <div class="bm-chain__node"><em>阶段 2</em><b>需求澄清</b><small>把模糊需求拆成可选择、可编辑、可接受的结构化条目。</small></div>
+            <div class="bm-chain__node"><em>阶段 3</em><b>基线需求分析</b><small>转成页面、功能、原子功能、测试种子与追踪矩阵。</small></div>
+            <div class="bm-chain__node"><em>阶段 4</em><b>基线业务逻辑</b><small>生成业务流程、状态流转、数据流、权限与异常补偿。</small></div>
+            <div class="bm-chain__node"><em>阶段 5</em><b>原型设计</b><small>生成可预览的 HTML 原型，含页面结构与交互。</small></div>
+            <div class="bm-chain__node"><em>阶段 6</em><b>测试分析</b><small>生成测试分析矩阵、原子测试点与自动化测试用例。</small></div>
+            <div class="bm-chain__node"><em>阶段 7</em><b>产品实现</b><small>基于前序产物与设计风格生成真实代码并部署预览。</small></div>
+          </div>
+
+          <h3>不同会话类型走多长的链路</h3>
+          <table class="bm-table">
+            <thead>
+              <tr><th>会话类型</th><th>覆盖阶段</th><th>是否自动</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>一句话生成应用</td><td>阶段 1 → 7（全链路）</td><td><span class="bm-status bm-status--done">全自动</span></td></tr>
+              <tr><td>一句话需求</td><td>阶段 1 → 7，但强调先澄清后生成</td><td><span class="bm-status bm-status--run">半自动</span></td></tr>
+              <tr><td>从需求澄清开始</td><td>阶段 2 → 7（跳过项目从零发散）</td><td><span class="bm-status bm-status--run">半自动</span></td></tr>
+              <tr><td>已有原型图</td><td>从原型解析 → 基线分析 → 业务逻辑 → 测试 → 实现</td><td><span class="bm-status bm-status--run">半自动</span></td></tr>
+              <tr><td>对话</td><td>不强制链路，按需调用能力</td><td><span class="bm-status bm-status--wait">手动</span></td></tr>
+            </tbody>
+          </table>
+
+          <h3>如何读懂执行状态</h3>
+          <p>会话详情页左侧会为每个阶段显示一张执行卡片，通过颜色和标记表示进度：</p>
+          <p>
+            <span class="bm-status bm-status--done">已完成</span>&nbsp;&nbsp;
+            <span class="bm-status bm-status--run">进行中</span>&nbsp;&nbsp;
+            <span class="bm-status bm-status--fail">失败</span>&nbsp;&nbsp;
+            <span class="bm-status bm-status--wait">等待中</span>
+          </p>
+          <div class="bm-callout bm-callout--warn">
+            <strong>某一阶段失败不影响前序产物。</strong>例如「产品实现」失败时，前面的需求澄清、业务逻辑、原型、测试产物依然有效、可复用。你可以查看失败卡片的 AI 消息、代码预览和工作区文件定位原因，修正后重试。
+          </div>
+        </section>
+
+        <!-- 08 工作区 -->
+        <section id="workspace" class="bm-section">
+          <h2><span class="bm-section__no">08</span>会话详情工作区（10 个页签）</h2>
+          <p class="bm-lede">
+            点击「生成」或点开任意历史产品卡片后，进入的就是<strong>会话详情工作区</strong>（CodexChat 页面）。
+            左侧是对话与研发链路执行区，右侧是按对象组织的工作区页签。下面这 10 个一级页签，也是「选择 AI 研发对象」弹框里的对象来源。
+          </p>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/04-session-detail-overview.png" alt="AI 会话详情页总览">
+            <figcaption>AI 会话详情页：左侧为对话与研发链路执行记录，右侧为工作区页签。每个页签下可能还有子对象。</figcaption>
+          </figure>
+
+          <table class="bm-table">
+            <thead>
+              <tr><th style="width:130px">一级页签</th><th>二级子对象</th><th>用途</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>项目</strong></td><td>项目澄清、项目基线</td><td>确认项目范围、角色、业务对象、约束和后续研发输入，并沉淀为项目基线。</td></tr>
+              <tr><td><strong>需求</strong></td><td>需求澄清、基线需求分析、基线业务逻辑</td><td>把需求从口语描述推进到结构化基线、脑图和可编辑业务逻辑图。</td></tr>
+              <tr><td><strong>原型预览</strong></td><td>AI 原型、Axure 原型</td><td>查看 AI 生成的原型或导入的 Axure 原型，作为需求、测试和开发的依据。</td></tr>
+              <tr><td><strong>原型需求分析</strong></td><td>原型需求分析、原型业务逻辑</td><td>从已有原型解析出页面、组件、交互和业务流程。</td></tr>
+              <tr><td><strong>测试设计</strong></td><td>测试分析、自动化测试用例</td><td>生成等价类、边界值、状态转换、权限、异常、数据一致性等测试设计。</td></tr>
+              <tr><td><strong>设计风格</strong></td><td>页面设计风格</td><td>选择视觉风格、Design Token、页面模板和视觉验收要求。</td></tr>
+              <tr><td><strong>产品预览</strong></td><td>产品预览</td><td>查看可访问的生成应用或预览服务地址。</td></tr>
+              <tr><td><strong>工作区</strong></td><td>工作区文件、工作区快照</td><td>查看会话生成的文件、代码资产、快照与恢复点等治理对象。</td></tr>
+              <tr><td><strong>代码预览</strong></td><td>代码预览</td><td>查看会话生成的源代码文件内容。</td></tr>
+              <tr><td><strong>上传文件</strong></td><td>上传文件</td><td>查看你在本会话中上传的原始文件。</td></tr>
+            </tbody>
+          </table>
+          <div class="bm-callout">
+            <strong>页签的顺序就是研发的推进顺序。</strong>建议从左到右依次验收：先确认「项目 / 需求」，再看「原型 / 测试设计 / 设计风格」，最后看「产品预览 / 代码」。
+          </div>
+        </section>
+
+        <!-- 09 需求澄清 -->
+        <section id="clarification" class="bm-section">
+          <h2><span class="bm-section__no">09</span>需求澄清操作（核心体验）</h2>
+          <p class="bm-lede">
+            需求澄清是本平台最核心的体验之一。它不是让 AI 写一段需求说明，而是把需求拆成一条条<strong>可选择、可编辑、可追踪、可验收</strong>的结构化条目，
+            由你逐条确认后沉淀为稳定的需求基线，供后续所有环节复用。
+          </p>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/05-requirement-clarification.png" alt="需求澄清工作区">
+            <figcaption>需求澄清工作区：支持选择需求项、批量打磨、批量重写、接受需求、应用更新、不接受需求。</figcaption>
+          </figure>
+
+          <h3>单条需求上的操作</h3>
+          <div class="bm-grid bm-grid--2">
+            <section class="bm-card">
+              <h4>🔧 打磨</h4>
+              <p>让 AI 在当前条目基础上做更细的拆解，产出更细的子需求或补充验收点。适合把粗需求变精。</p>
+            </section>
+            <section class="bm-card">
+              <h4>♻️ 重写</h4>
+              <p>用 AI 重新生成替换当前条目。适合当前条目方向不对、需要整体改写时使用。</p>
+            </section>
+            <section class="bm-card">
+              <h4>✅ 接受需求</h4>
+              <p>确认该需求。接受后它会成为后续基线分析、业务逻辑、原型、测试和实现的稳定输入。</p>
+            </section>
+            <section class="bm-card">
+              <h4>🚫 不接受需求</h4>
+              <p>排除该需求。保存基线时会被剔除，避免无依据的功能进入实现。</p>
+            </section>
+          </div>
+
+          <h3>批量操作</h3>
+          <p>勾选多条需求后，可以进行<strong>批量打磨 / 批量重写 / 批量接受</strong>，适合把用户故事、会议纪要、业务描述一次性整理成可进入研发链路的需求基线。</p>
+
+          <h4>从「只有一个用户故事」开始的推荐流程</h4>
+          <ol class="bm-steps">
+            <li><strong>选择「一句话需求」会话类型</strong><span>输入用户故事，如「作为客服主管，我希望查看超时未处理反馈，以便及时催办」。</span></li>
+            <li><strong>让 AI 拆解故事</strong><span>平台会识别角色、业务目标、触发条件、业务对象、页面功能、规则、异常和验收标准。</span></li>
+            <li><strong>在需求澄清中逐条确认</strong><span>对拆出的条目逐项打磨、重写、接受或不接受，把口语化故事变成专业需求。</span></li>
+            <li><strong>生成基线分析和测试种子</strong><span>接受后的需求进入基线需求分析，用于生成页面功能、原子功能、追踪矩阵和测试点。</span></li>
+          </ol>
+          <div class="bm-callout bm-callout--warn">
+            <strong>验收要点：</strong>确认需求都来自你当前会话的输入，没有 AI 凭空新增的「幻觉需求」；同时检查是否覆盖了角色、对象、规则、异常和验收标准。发现问题就用「重写」或「不接受」处理后再往下走。
+          </div>
+        </section>
+
+        <!-- 10 基线分析与业务逻辑 -->
+        <section id="analysis" class="bm-section">
+          <h2><span class="bm-section__no">10</span>基线需求分析与业务逻辑</h2>
+          <p class="bm-lede">
+            需求被接受后，平台会把它转化成两类结构化产物：<strong>基线需求分析</strong>（页面 / 功能 / 测试种子的结构化拆解）
+            和<strong>基线业务逻辑</strong>（业务流程与状态图）。它们是原型、测试和代码实现的直接输入。
+          </p>
+
+          <h3>基线需求分析</h3>
+          <p>把接受的需求转成后续可消费的结构化输入，通常包含：</p>
+          <ul class="bm-list">
+            <li><strong>页面节点</strong>：系统包含哪些页面。</li>
+            <li><strong>功能节点 / 原子功能</strong>：每个页面下的功能，以及不可再拆的最小功能单元。</li>
+            <li><strong>原子测试种子</strong>：从原子功能派生的最小测试关注点。</li>
+            <li><strong>追踪矩阵</strong>：需求 → 功能 → 测试的对应关系，保证不漏不错。</li>
+          </ul>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/06-baseline-requirement-analysis.png" alt="基线需求分析">
+            <figcaption>基线需求分析：以脑图 / 结构化方式呈现页面、功能、原子功能和测试种子，可继续细化并同步回需求澄清项。</figcaption>
+          </figure>
+
+          <h3>基线业务逻辑</h3>
+          <p>生成当前系统真实业务的流程图，通常包含业务流程、状态流转、数据流、权限矩阵与异常补偿。</p>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/07-business-logic.png" alt="基线业务逻辑图">
+            <figcaption>基线业务逻辑图：正确时应描述当前系统（如客户反馈管理系统）的业务流程，而不是历史示例。业务逻辑画布支持查看节点、连线，并可对图进行编辑与补充。</figcaption>
+          </figure>
+          <div class="bm-callout bm-callout--warn">
+            <strong>常见问题：业务逻辑图内容不对。</strong>先检查图中的业务对象和页面是否来自当前会话。如果出现了历史系统（例如无关的「图书管理系统」示例），说明生成时读错了上下文——重新触发「基线业务逻辑」，并明确要求读取当前会话的项目 / 需求基线。
+          </div>
+        </section>
+
+        <!-- 11 原型与测试 -->
+        <section id="prototype" class="bm-section">
+          <h2><span class="bm-section__no">11</span>原型与测试设计</h2>
+          <p class="bm-lede">
+            在写代码之前，平台会先产出<strong>可预览的原型</strong>和<strong>测试设计</strong>，让你在实现前就能检查页面结构和质量覆盖，把问题拦在最前面。
+          </p>
+
+          <h3>原型预览</h3>
+          <p>在「原型预览」页签查看 AI 生成的 HTML 原型（或导入的 Axure 原型）。用它检查：页面是否齐全、字段是否完整、操作入口是否清晰、状态和提示是否能支撑核心业务流。</p>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/08-prototype-preview.png" alt="原型预览">
+            <figcaption>原型预览：在开发实现前检查页面结构、交互入口、字段、状态和核心流程。</figcaption>
+          </figure>
+
+          <h3>测试设计</h3>
+          <p>在「测试设计」页签查看两类产物：</p>
+          <ul class="bm-list">
+            <li><strong>测试分析</strong>：从等价类、边界值、状态转换、权限、异常、数据一致性等维度生成的测试分析矩阵与原子测试点。</li>
+            <li><strong>自动化测试用例</strong>：可用于自动化执行（如 Playwright）的测试用例草案。</li>
+          </ul>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/09-test-design.png" alt="测试设计">
+            <figcaption>测试设计：查看测试分析与自动化测试用例，检查测试覆盖是否完整。</figcaption>
+          </figure>
+          <div class="bm-callout">
+            <strong>验收要点：</strong>确认测试是否覆盖了等价类、边界值、状态转换、权限、异常和数据一致性；每个测试点最好只验证一个条件，粒度太粗时可在测试分析中继续细化原子测试点。
+          </div>
+        </section>
+
+        <!-- 12 设计风格 -->
+        <section id="design" class="bm-section">
+          <h2><span class="bm-section__no">12</span>设计风格：把视觉约束带入开发</h2>
+          <p class="bm-lede">
+            「设计风格」页签位于「产品预览」之前，用于在写代码之前确定页面视觉风格。开发时 AI 会读取所选风格档案，
+            把 Design Token、页面模板和视觉验收要求写入实现要求中，保证生成的界面统一、专业。
+          </p>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/10-design-style.png" alt="设计风格页签">
+            <figcaption>设计风格页签：选择风格档案，查看页面预览与 Design Token。</figcaption>
+          </figure>
+
+          <h3>内置风格档案</h3>
+          <div class="bm-grid">
+            <section class="bm-card"><h4>企业稳健</h4><p>研发平台 / 质量平台 / 管理后台。低噪声、表格可扫描、操作路径明确，是默认风格。</p></section>
+            <section class="bm-card"><h4>工程深色</h4><p>面向开发工具、控制台类深色界面。</p></section>
+            <section class="bm-card"><h4>金融精密</h4><p>面向数据运营、金融类高信息密度界面。</p></section>
+            <section class="bm-card"><h4>清爽协作</h4><p>面向协作、效率类轻量清爽界面。</p></section>
+            <section class="bm-card"><h4>AI 实验室</h4><p>面向 AI 产品、前沿科技感界面。</p></section>
+          </div>
+
+          <h3>Design Token 与页面模板</h3>
+          <p>
+            每个风格档案都带一组 <strong>Design Token</strong>（主色、辅助色、强调色、界面底色、圆角、密度、字体等），
+            以及可覆盖的<strong>页面模板</strong>（登录页、工作台、列表页、详情 / 表单页、数据看板、移动端等）
+            和<strong>质量门禁</strong>（设计 Token 一致、桌面 / 移动端自适应、Playwright 截图验收、文字不溢出不重叠等）。
+          </p>
+
+          <h4>操作步骤</h4>
+          <ol class="bm-steps">
+            <li><strong>选择风格</strong><span>按软件类型选：管理后台优先「企业稳健」，数据运营选「金融精密」，开发工具选「工程深色」。</span></li>
+            <li><strong>查看 / 微调 Token 与模板</strong><span>在页签中预览页面效果、核对色彩与密度，按需调整。</span></li>
+            <li><strong>保存设计档案</strong><span>保存后在当前会话及后续开发环节复用，形成可追踪的项目设计基线。开发 Agent 会据此生成界面。</span></li>
+          </ol>
+          <div class="bm-callout bm-callout--ok">
+            用「一句话生成应用」时，如果你没有单独选择风格，平台会自动使用默认的「企业稳健」设计档案，保证生成结果依然规整。
+          </div>
+        </section>
+
+        <!-- 13 产品预览与代码 -->
+        <section id="preview" class="bm-section">
+          <h2><span class="bm-section__no">13</span>产品预览与代码</h2>
+          <p class="bm-lede">研发链路走到最后，平台会生成真实代码并尝试启动预览服务。你可以在这两个页签查看最终成果。</p>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/12-product-preview.png" alt="产品预览">
+            <figcaption>产品预览：当服务在线时，可直接在页签内查看运行中的应用，或复制预览地址在新窗口打开。</figcaption>
+          </figure>
+          <div class="bm-grid bm-grid--2">
+            <section class="bm-card">
+              <h4>产品预览页签</h4>
+              <p>显示生成应用的运行预览。卡片和页签会标注「产品服务在线 / 服务不在线 / 检测中」。在线时可点击进入或复制预览地址分享。</p>
+            </section>
+            <section class="bm-card">
+              <h4>代码预览页签</h4>
+              <p>查看会话生成的源代码文件内容。当产品实现失败时，可结合代码预览与工作区文件定位构建、启动或运行错误。</p>
+            </section>
+          </div>
+          <div class="bm-callout bm-callout--warn">
+            <strong>预览打不开怎么办？</strong>查看左侧研发链路的失败卡片、AI 消息、代码预览和工作区文件，通常是容器、依赖、端口或构建的问题。修正后可重新触发产品实现，前序产物不受影响。
+          </div>
+        </section>
+
+        <!-- 14 工具箱能力 -->
+        <section id="toolbox" class="bm-section">
+          <h2><span class="bm-section__no">14</span>工具箱能力（Prompt / Skill / Agent / Flow / MCP / Tool）</h2>
+          <p class="bm-lede">
+            AI 会话可以从工具箱按需挂载不同类型的专业能力。能力不是越多越好，建议按当前任务选择必要能力，避免上下文过载。
+            点击输入区「工具箱能力」按钮，能力会按下面 6 种类型分组展示。
+          </p>
+          <div class="bm-grid">
+            <section class="bm-card"><h4>Prompt（提示词）</h4><p>固定格式的分析、总结、审查、生成任务。例如「需求分析 Prompt」「用例生成 Prompt」。</p></section>
+            <section class="bm-card"><h4>Skill（技能）</h4><p>带规则、步骤和输出合约的专业能力。例如「缺陷分析 Skill」、各阶段官方研发 Skill。</p></section>
+            <section class="bm-card"><h4>Agent（智能体）</h4><p>需要决策、检查、串联多步动作的能力。例如「Playwright 测试 Agent」、源头门禁 Agent。</p></section>
+            <section class="bm-card"><h4>Flow（流程）</h4><p>固定流程编排。例如「AI 研发闭环 Flow」（需求→用例→开发→测试→缺陷→回归→提交）、「AI 自动部署 Flow」。</p></section>
+            <section class="bm-card"><h4>MCP（上下文接入）</h4><p>让 AI 安全读取外部或平台上下文。例如「平台上下文 MCP」，只读接入需求、任务、缺陷、部署等上下文。</p></section>
+            <section class="bm-card"><h4>Tool（工具动作）</h4><p>执行具体动作。例如「平台查询 Tool」「AI 需求创建 Tool」「AI 开发任务执行 Tool」「AI 部署执行 Tool」等。</p></section>
+          </div>
+
+          <h3>能力上的两个标记：风险等级与仅随本轮</h3>
+          <table class="bm-table">
+            <thead><tr><th style="width:150px">标记</th><th>含义</th></tr></thead>
+            <tbody>
+              <tr><td><span class="bm-tag">low</span> / <span class="bm-tag bm-tag--amber">medium</span> / <span class="bm-tag bm-tag--red">high</span> 风险等级</td>
+                <td>标识能力的操作风险。high 风险（如直接执行、部署类）请谨慎启用，确认操作影响后再使用。</td></tr>
+              <tr><td><span class="bm-tag bm-tag--purple">仅随本轮提示</span></td>
+                <td>该能力尚未通过审核（未 approved）或不可长期绑定，只会作为本轮提示的一部分临时生效，不会持久绑定到会话。</td></tr>
+            </tbody>
+          </table>
+          <div class="bm-callout">
+            只有<strong>已启用且已审核通过</strong>的能力才会被持久绑定到会话；其它能力仅在当前这一轮发送时携带。能力的创建、审核和上架由「AI 军火库 / 能力市场」管理，普通使用者按需勾选即可。
+          </div>
+        </section>
+
+        <!-- 15 文件与研发对象 -->
+        <section id="references" class="bm-section">
+          <h2><span class="bm-section__no">15</span>附带文件与引用 AI 研发对象</h2>
+          <p class="bm-lede">除了文字需求，你还能给会话补充两类上下文：本地上传的文件，以及已有会话沉淀的研发产物。</p>
+
+          <h3>选择文件（📁）</h3>
+          <ul class="bm-list">
+            <li>支持 PDF、Word、TXT、Markdown、HTML、图片（PNG/JPG）、ZIP/TAR/RAR、Excel、PPT 等格式。</li>
+            <li>单次最多附带 <strong>6 个</strong>文件；平台会自动为需求文档提取文本作为上下文。</li>
+            <li>原型类文件（HTML、ZIP 等）会被自动标记为「原型」，其它标记为「其它」。</li>
+          </ul>
+
+          <h3>选择 AI 研发对象（🔗）</h3>
+          <p>
+            点击后打开「选择本轮上下文」弹框，按<strong>项目 / 需求 / 原型预览 / 原型需求分析 / 测试设计 / 设计风格 / 产品预览 / 工作区 / 代码预览 / 上传文件</strong>分类，
+            引用其它会话已经生成的产物（如某个需求基线、某张业务逻辑图、某份测试用例、某段代码）作为本轮上下文。
+          </p>
+          <figure class="bm-figure">
+            <img src="assets/ai-session-manual/11-session-workspace.png" alt="工作区文件与治理对象">
+            <figcaption>「工作区」相关对象：会话生成的文件、快照、交付资产等，都可被引用为后续会话的上下文。</figcaption>
+          </figure>
+          <div class="bm-callout bm-callout--ok">
+            <strong>典型用法：二次迭代。</strong>新建一个「对话」或「从需求澄清开始」的会话，引用上一版应用的需求基线或代码，就能在已有成果上继续改进，而不用从零开始。
+          </div>
+        </section>
+
+        <!-- 16 验收清单 -->
+        <section id="acceptance" class="bm-section">
+          <h2><span class="bm-section__no">16</span>结果验收清单</h2>
+          <p class="bm-lede">企业级 AI 开发不能只看「有没有生成页面」。建议按下面 6 层逐层验收，任何一层不通过都回到对应环节修正后再往下走。</p>
+          <table class="bm-table">
+            <thead>
+              <tr><th style="width:100px">验收层</th><th>检查什么</th><th>不通过时怎么处理</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>需求层</td><td>需求是否都来自当前会话输入？有无凭空新增？是否覆盖角色、对象、规则、异常和验收标准？</td><td>回到需求澄清，重写或不接受错误需求，再重新生成后续产物。</td></tr>
+              <tr><td>业务逻辑层</td><td>流程图是否描述当前系统真实业务？是否包含状态流转、权限、异常和补偿？</td><td>重新生成基线业务逻辑，并要求读取当前项目 / 需求基线。</td></tr>
+              <tr><td>原型层</td><td>页面、字段、操作、状态和提示是否能支撑核心业务流？</td><td>回到原型或需求澄清补充页面与交互，再更新测试设计。</td></tr>
+              <tr><td>测试层</td><td>是否覆盖等价类、边界值、状态转换、权限、异常和数据一致性？</td><td>在测试分析中继续细化原子测试点，避免一个测试点验证多个条件。</td></tr>
+              <tr><td>风格层</td><td>界面是否符合所选设计风格、Design Token、页面密度和视觉验收要求？</td><td>回到设计风格页签重新选择或保存档案，再让开发环节修正。</td></tr>
+              <tr><td>运行层</td><td>产品预览是否可访问？容器、数据库、接口和持久化是否正常？</td><td>查看产品实现日志、代码预览和工作区文件，定位构建、启动或运行错误。</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- 17 FAQ -->
+        <section id="faq" class="bm-section">
+          <h2><span class="bm-section__no">17</span>常见问题与处理</h2>
+          <div class="bm-grid bm-grid--2">
+            <section class="bm-card">
+              <h4>提示"加载工具箱能力失败"</h4>
+              <p>通常是能力资产或会话环境接口临时加载失败。先确认登录态有效，点击「重试」；若只影响能力列表，可继续查看和使用已生成的产物。</p>
+            </section>
+            <section class="bm-card">
+              <h4>提示"加载会话环境失败"</h4>
+              <p>会话环境加载失败会影响环境、模型和上下文选择。重新进入「AI 产品」页或会话详情页，确认当前会话环境仍存在后点击「重试」。</p>
+            </section>
+            <section class="bm-card">
+              <h4>突然跳到登录页</h4>
+              <p>多数与本地登录凭据被清空或刷新失败有关。重新登录后再打开多个页签验证；同一浏览器应共用一套登录态。</p>
+            </section>
+            <section class="bm-card">
+              <h4>业务逻辑图 / 需求内容不对</h4>
+              <p>检查产物中的业务对象和页面是否来自当前会话。若混入历史系统内容，回到对应环节重新生成，并要求读取当前会话的项目 / 需求基线。</p>
+            </section>
+            <section class="bm-card">
+              <h4>产品实现失败 / 预览打不开</h4>
+              <p>查看左侧链路失败卡片、AI 消息、代码预览和工作区文件。失败不影响前序需求、业务逻辑、原型和测试产物继续复用，修正后重试即可。</p>
+            </section>
+            <section class="bm-card">
+              <h4>不知道从哪种会话类型开始</h4>
+              <p>只想咨询选「对话」；只有一句故事选「一句话需求」；想最快产出系统选「一句话生成应用」；已有需求文字选「从需求澄清开始」；已有原型选「已有原型图」。</p>
+            </section>
+            <section class="bm-card">
+              <h4>「生成」按钮点不了</h4>
+              <p>需同时满足：输入框有内容、已选会话环境、已选模型。三者齐全后按钮才会亮起，也可在输入框内按 Enter 发送。</p>
+            </section>
+            <section class="bm-card">
+              <h4>能力太多，该选哪些</h4>
+              <p>研发型会话类型已自动带上该场景所需的官方能力，通常无需手动加。只有做特定动作（如查询平台、创建需求、执行部署）时，才按需补选对应 Tool / Agent。</p>
+            </section>
+          </div>
+        </section>
+
+        <!-- 18 术语表 -->
+        <section id="glossary" class="bm-section">
+          <h2><span class="bm-section__no">18</span>术语表</h2>
+          <table class="bm-table">
+            <thead><tr><th style="width:160px">术语</th><th>解释</th></tr></thead>
+            <tbody>
+              <tr><td>会话（Session）</td><td>一次完整 AI 研发过程的载体，含输入、配置和所有产物，有唯一 ID。</td></tr>
+              <tr><td>会话类型</td><td>本次会话开启的场景：对话 / 一句话需求 / 一句话生成应用 / 从需求澄清开始 / 已有原型图。</td></tr>
+              <tr><td>研发链路</td><td>项目澄清 → 需求澄清 → 基线需求分析 → 基线业务逻辑 → 原型设计 → 测试分析 → 产品实现 的推进流程。</td></tr>
+              <tr><td>基线（Baseline）</td><td>被确认、可稳定复用的产物版本，如项目基线、需求基线。</td></tr>
+              <tr><td>需求澄清</td><td>把模糊需求拆成可打磨 / 重写 / 接受 / 不接受的结构化条目的过程。</td></tr>
+              <tr><td>原子功能 / 原子测试点</td><td>不可再拆分的最小功能单元 / 最小测试关注点。</td></tr>
+              <tr><td>Design Token</td><td>设计变量集合（主色、圆角、密度、字体等），保证界面视觉一致。</td></tr>
+              <tr><td>Codex CLI</td><td>用于真实生成代码 / 应用的执行引擎，配套「授权类型」与「速度」两个选项。</td></tr>
+              <tr><td>工具箱能力</td><td>可挂载到会话的专业能力，分 Prompt / Skill / Agent / Flow / MCP / Tool 六类。</td></tr>
+              <tr><td>工作区快照</td><td>会话工作区在某一时刻的存档，可作为恢复点或治理对象。</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <footer class="bm-footer">
+          <p>本手册基于 BearAI 平台当前已实现的 AI 会话开发能力编写，不包含「思源质量分析」模块。未在平台中形成明确入口或可验证交互的能力，不作为正式操作步骤描述。</p>
+          <p>页面为自包含静态 HTML，样式统一作用于 <code>.bearai-manual</code> 容器，截图位于 <code>docs/assets/ai-session-manual/</code>，可直接以 iframe 嵌入官网或整合到文档中心。</p>
+        </footer>
+      </article>
+    </div>
+    <a class="bm-anchor-top" href="#intro" aria-label="回到顶部">↑</a>
+  </main>
+</body>
+</html>

@@ -1,0 +1,5 @@
+-r core.txt
+-r automation.txt
+-r document.txt
+-r integration.txt
+-r asset.txt

@@ -1,0 +1,227 @@
+.manual-workspace-density-scope {
+  --manual-workspace-font-size: 12px;
+  --manual-workspace-control-height: 24px;
+  --manual-workspace-filter-width: 96px;
+  --manual-workspace-filter-gap: 6px;
+  --el-font-size-base: var(--manual-workspace-font-size);
+  --el-font-size-small: var(--manual-workspace-font-size);
+  --el-component-size: var(--manual-workspace-control-height);
+  --el-component-size-small: var(--manual-workspace-control-height);
+  font-size: var(--manual-workspace-font-size);
+}
+
+/* Keep the workspace typography aligned with the project/version context controls. */
+.manual-workspace-density-scope :where(
+  input,
+  select,
+  textarea,
+  button,
+  .el-tabs__item,
+  .el-form-item__label,
+  .el-input__inner,
+  .el-textarea__inner,
+  .el-select__selected-item,
+  .el-select__placeholder,
+  .el-button,
+  .el-link,
+  .el-checkbox__label,
+  .el-radio__label,
+  .el-pagination,
+  .el-table,
+  .el-table th.el-table__cell > .cell,
+  .el-table td.el-table__cell > .cell,
+  .el-table .el-tag,
+  .el-table .el-link,
+  .el-table .el-button
+) {
+  font-size: var(--manual-workspace-font-size) !important;
+}
+
+.manual-workspace-density-scope :where(input, select, textarea, button) {
+  font-family: inherit;
+}
+
+.manual-workspace-density-scope :where(
+  .tab-toolbar,
+  .overview-toolbar,
+  .analysis-toolbar,
+  .execution-toolbar,
+  .wiki-main-toolbar,
+  .asset-insight-toolbar,
+  .toolbar-card .toolbar,
+  .toolbar-row,
+  .jira-data-page .toolbar,
+  .version-requirement-panel .tab-toolbar
+) {
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.manual-workspace-density-scope :where(
+  .search-form,
+  .toolbar-filters,
+  .toolbar-left,
+  .toolbar-right,
+  .toolbar-actions,
+  .tab-toolbar-actions,
+  .defect-toolbar-buttons,
+  .report-toolbar-buttons,
+  .wiki-filter-group,
+  .wiki-action-group,
+  .asset-insight-toolbar__search,
+  .section-actions
+) {
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: var(--manual-workspace-filter-gap) !important;
+  white-space: nowrap;
+}
+
+.manual-workspace-density-scope .search-form.el-form--inline {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  width: max-content;
+  min-width: max-content;
+  margin: 0;
+}
+
+.manual-workspace-density-scope .search-form.el-form--inline > .el-form-item {
+  flex: 0 0 auto;
+  margin-right: 0 !important;
+  margin-bottom: 0 !important;
+  white-space: nowrap;
+}
+
+.manual-workspace-density-scope .search-form .el-form-item__content {
+  flex-wrap: nowrap;
+  gap: var(--manual-workspace-filter-gap);
+}
+
+.manual-workspace-density-scope :where(
+  .tab-toolbar-actions,
+  .toolbar-actions,
+  .toolbar-right,
+  .defect-toolbar-buttons,
+  .report-toolbar-buttons,
+  .wiki-action-group
+) {
+  flex: 0 0 auto;
+}
+
+.manual-workspace-density-scope :where(
+  .search-form,
+  .toolbar-filters,
+  .toolbar-left,
+  .wiki-filter-group,
+  .asset-insight-toolbar__search,
+  .execution-toolbar .toolbar-filters
+) :where(.el-input, .el-select, .el-cascader) {
+  flex: 0 0 var(--manual-workspace-filter-width) !important;
+  width: var(--manual-workspace-filter-width) !important;
+  min-width: 0 !important;
+}
+
+.manual-workspace-density-scope .search-form > .el-form-item:first-child :where(.el-input, .el-select, .el-cascader) {
+  flex-basis: 120px !important;
+  width: 120px !important;
+}
+
+.manual-workspace-density-scope :where(
+  .search-form,
+  .toolbar-filters,
+  .toolbar-left,
+  .wiki-filter-group,
+  .asset-insight-toolbar__search,
+  .execution-toolbar .toolbar-filters
+) :where(.el-date-editor--daterange, .el-date-editor--datetimerange) {
+  flex: 0 0 190px !important;
+  width: 190px !important;
+}
+
+.manual-workspace-density-scope :where(
+  .search-form,
+  .toolbar-filters,
+  .toolbar-left,
+  .wiki-filter-group,
+  .asset-insight-toolbar__search,
+  .execution-toolbar .toolbar-filters
+) :where(.el-input__wrapper, .el-select__wrapper, .el-date-editor.el-input__wrapper, .el-range-editor.el-input__wrapper) {
+  height: var(--manual-workspace-control-height) !important;
+  min-height: var(--manual-workspace-control-height) !important;
+}
+
+.manual-workspace-density-scope :where(
+  .tab-toolbar,
+  .overview-toolbar,
+  .analysis-toolbar,
+  .execution-toolbar,
+  .wiki-main-toolbar,
+  .asset-insight-toolbar,
+  .toolbar-card .toolbar,
+  .toolbar-row,
+  .jira-data-page .toolbar,
+  .el-table
+) .el-button:not(.is-link) {
+  min-height: var(--manual-workspace-control-height);
+  height: var(--manual-workspace-control-height);
+  padding: 3px 8px;
+}
+
+.manual-workspace-density-scope :where(
+  .tab-toolbar,
+  .toolbar-card .toolbar,
+  .execution-toolbar,
+  .wiki-main-toolbar,
+  .jira-data-page .toolbar
+) .el-button + .el-button {
+  margin-left: 0;
+}
+
+.manual-workspace-density-scope .jira-data-page .toolbar-left :where(.el-input, .el-select) {
+  flex-basis: 132px !important;
+  width: 132px !important;
+}
+
+.manual-workspace-density-scope .version-requirement-panel .toolbar-left .el-input {
+  flex-basis: 160px !important;
+  width: 160px !important;
+}
+
+.snapshot-manager .manual-workspace-density-scope .toolbar-filters > .el-input,
+.visual-flow-manager .manual-workspace-density-scope .toolbar-filters > .el-input,
+.recording-manager .manual-workspace-density-scope .toolbar-filters > .el-input,
+.visual-flow-execution-manager .manual-workspace-density-scope .toolbar-filters > .el-input {
+  flex-basis: 180px !important;
+  width: 180px !important;
+}
+
+.automation-script-manager .manual-workspace-density-scope .search-input,
+.manual-workspace-density-scope .wiki-keyword-input {
+  width: 180px !important;
+}
+
+.manual-workspace-density-scope .wiki-project-select {
+  width: 140px !important;
+}
+
+@media (max-width: 960px) {
+  .manual-workspace-density-scope :where(
+    .tab-toolbar,
+    .overview-toolbar,
+    .analysis-toolbar,
+    .execution-toolbar,
+    .wiki-main-toolbar,
+    .asset-insight-toolbar,
+    .toolbar-card .toolbar,
+    .toolbar-row,
+    .jira-data-page .toolbar,
+    .version-requirement-panel .tab-toolbar
+  ) {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+}

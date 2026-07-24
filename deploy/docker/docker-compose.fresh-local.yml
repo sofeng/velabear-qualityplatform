@@ -1,0 +1,235 @@
+x-fresh-web-environment: &fresh-web-environment
+  CORS_ALLOWED_ORIGINS: http://localhost:42080,http://127.0.0.1:42080,http://host.docker.internal:42080
+  CSRF_TRUSTED_ORIGINS: http://localhost:42080,http://127.0.0.1:42080,http://host.docker.internal:42080
+  EMAIL_VERIFICATION_EXPOSE_CODE: "1"
+
+services:
+  testhub-mysql:
+    image: docker.m.daocloud.io/library/mysql:8.0
+    container_name: testhub-fresh-mysql
+    ports: !override
+      - "33306:3306"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/mysql:/var/lib/mysql:z
+
+  testhub-redis:
+    image: docker.m.daocloud.io/library/redis:7-alpine
+    container_name: testhub-fresh-redis
+    ports: !override
+      - "36379:6379"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/redis:/data:z
+
+  testhub-backend-init:
+    image: local/testhub-platform-backend-fresh:latest
+    container_name: testhub-fresh-backend-init
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.container.Dockerfile
+      args:
+        BACKEND_RUNTIME_BASE: local/testhub-platform-backend-core-runtime-fresh:latest
+    environment:
+      <<: *fresh-web-environment
+      CODEX_RUNTIME_IMAGE: local/testhub-platform-codex-runtime-fresh:latest
+      CLAUDE_RUNTIME_IMAGE: local/testhub-platform-claude-runtime-fresh:latest
+      AI_SESSION_WORKSPACE_CODEX_ENABLED: "1"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+      - ../init-seed:/app/init-seed:ro,z
+
+  testhub-backend:
+    image: local/testhub-platform-backend-fresh:latest
+    container_name: testhub-fresh-backend
+    environment:
+      <<: *fresh-web-environment
+    ports: !override
+      - "58000:8000"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+
+  testhub-automation-service:
+    image: local/testhub-platform-automation-service-fresh:latest
+    container_name: testhub-fresh-automation-service
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.automation-service.Dockerfile
+      args:
+        BACKEND_RUNTIME_BASE: local/testhub-platform-backend-automation-runtime-fresh:latest
+    environment:
+      <<: *fresh-web-environment
+      PLAYWRIGHT_RECORDER_CDP_HOST_PORT: "59222"
+      PLAYWRIGHT_RECORDER_CDP_HOST_PORT_END: "59262"
+      PLAYWRIGHT_RECORDER_DEVTOOLS_EXTERNAL_ORIGIN: http://localhost:59222
+      PLAYWRIGHT_RECORDER_NOVNC_HOST_PORT: "56080"
+      PLAYWRIGHT_RECORDER_NOVNC_HOST_PORT_END: "56120"
+      PLAYWRIGHT_RECORDER_NOVNC_EXTERNAL_ORIGIN: http://localhost:56080
+    ports: !override
+      - "59222-59262:9222-9262"
+      - "127.0.0.1:56080-56120:6080-6120"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+      - ../../playwright_snapshot:/app/playwright_snapshot:z
+
+  testhub-document-service:
+    image: local/testhub-platform-document-service-fresh:latest
+    container_name: testhub-fresh-document-service
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.service.Dockerfile
+      args:
+        BACKEND_RUNTIME_BASE: local/testhub-platform-backend-document-runtime-fresh:latest
+        TESTHUB_RUNTIME_ROLE: document
+    environment:
+      <<: *fresh-web-environment
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+
+  testhub-asset-service:
+    image: local/testhub-platform-asset-service-fresh:latest
+    container_name: testhub-fresh-asset-service
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.service.Dockerfile
+      args:
+        BACKEND_RUNTIME_BASE: local/testhub-platform-backend-asset-runtime-fresh:latest
+        TESTHUB_RUNTIME_ROLE: asset
+    environment:
+      <<: *fresh-web-environment
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+      - ../..:/workspace/source-repo:ro,z
+
+  testhub-integration-service:
+    image: local/testhub-platform-integration-service-fresh:latest
+    container_name: testhub-fresh-integration-service
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.service.Dockerfile
+      args:
+        BACKEND_RUNTIME_BASE: local/testhub-platform-backend-integration-runtime-fresh:latest
+        TESTHUB_RUNTIME_ROLE: integration
+    environment:
+      <<: *fresh-web-environment
+      CODEX_RUNTIME_IMAGE: local/testhub-platform-codex-runtime-fresh:latest
+      CLAUDE_RUNTIME_IMAGE: local/testhub-platform-claude-runtime-fresh:latest
+      AI_SESSION_WORKSPACE_CODEX_ENABLED: "1"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+      - ../../.release_out:/workspace-release:ro,z
+      - ../..:/workspace/source-repo:ro,z
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  testhub-report-service:
+    image: local/testhub-platform-report-service-fresh:latest
+    container_name: testhub-fresh-report-service
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.service.Dockerfile
+      args:
+        BACKEND_RUNTIME_BASE: local/testhub-platform-backend-report-runtime-fresh:latest
+        TESTHUB_RUNTIME_ROLE: report
+    environment:
+      <<: *fresh-web-environment
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+
+  testhub-deployment-service:
+    image: local/testhub-platform-deployment-worker-fresh:latest
+    container_name: testhub-fresh-deployment-service
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.deployment-worker.Dockerfile
+      args:
+        BACKEND_RUNTIME_BASE: local/testhub-platform-backend-deployment-runtime-fresh:latest
+    environment:
+      <<: *fresh-web-environment
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+      - ../../.release_out:/workspace-release:ro,z
+      - ../..:/workspace/source-repo:ro,z
+
+  testhub-asset-worker:
+    image: local/testhub-platform-asset-service-fresh:latest
+    container_name: testhub-fresh-asset-worker
+    environment:
+      <<: *fresh-web-environment
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+      - ../..:/workspace/source-repo:ro,z
+
+  testhub-deployment-worker:
+    image: local/testhub-platform-deployment-worker-fresh:latest
+    container_name: testhub-fresh-deployment-worker
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.deployment-worker.Dockerfile
+      args:
+        BACKEND_RUNTIME_BASE: local/testhub-platform-backend-deployment-runtime-fresh:latest
+    environment:
+      <<: *fresh-web-environment
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+      - ../../.release_out:/workspace-release:ro,z
+      - ../..:/workspace/source-repo:ro,z
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  testhub-ai-dev-worker:
+    image: local/testhub-platform-integration-service-fresh:latest
+    container_name: testhub-fresh-ai-dev-worker
+    environment:
+      <<: *fresh-web-environment
+      CODEX_RUNTIME_IMAGE: local/testhub-platform-codex-runtime-fresh:latest
+      CLAUDE_RUNTIME_IMAGE: local/testhub-platform-claude-runtime-fresh:latest
+      AI_SESSION_WORKSPACE_CODEX_ENABLED: "1"
+    volumes: !override
+      - ../../.docker-data/testhub-platform-fresh/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-fresh/media:/app/media:z
+      - ../../.docker-data/testhub-platform-fresh/static:/app/static:z
+      - ../../.docker-data/testhub-platform-fresh/logs:/app/logs:z
+      - ../../.release_out:/workspace-release:ro,z
+      - ../..:/workspace/source-repo:ro,z
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  testhub-frontend:
+    image: local/testhub-platform-frontend-fresh:latest
+    container_name: testhub-fresh-frontend
+    ports: !override
+      - "42080:80"
+
+  testhub-codex-runtime:
+    image: local/testhub-platform-codex-runtime-fresh:latest
+    container_name: testhub-fresh-codex-runtime
+
+  testhub-claude-runtime:
+    image: local/testhub-platform-claude-runtime-fresh:latest
+    container_name: testhub-fresh-claude-runtime

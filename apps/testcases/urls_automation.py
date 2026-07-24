@@ -1,0 +1,41 @@
+from django.urls import path
+
+from . import views
+
+
+urlpatterns = [
+    path('local-agent/package/', views.PlaywrightLocalAgentPackageDownloadView.as_view(), name='playwright-local-agent-package'),
+    path('playwright-snapshots/', views.PlaywrightSnapshotListView.as_view(), name='playwright-snapshot-list'),
+    path('playwright-snapshots/export/', views.PlaywrightSnapshotBatchExportView.as_view(), name='playwright-snapshot-batch-export'),
+    path('playwright-snapshots/<str:filename>/download/', views.PlaywrightSnapshotDownloadView.as_view(), name='playwright-snapshot-download'),
+    path('playwright-snapshots/<str:filename>/parse/', views.PlaywrightSnapshotParseView.as_view(), name='playwright-snapshot-parse'),
+    path('playwright-snapshots/<str:filename>/', views.PlaywrightSnapshotDetailView.as_view(), name='playwright-snapshot-detail'),
+    path('playwright-recording-scripts/generate/', views.PlaywrightRecordingScriptGenerateView.as_view(), name='playwright-recording-script-generate'),
+    path('playwright-automation-scripts/', views.PlaywrightAutomationScriptListView.as_view(), name='playwright-automation-script-list'),
+    path('playwright-automation-scripts/<str:script_id>/versions/', views.PlaywrightAutomationScriptVersionListView.as_view(), name='playwright-automation-script-version-list'),
+    path('playwright-automation-scripts/<str:script_id>/versions/<int:version>/restore/', views.PlaywrightAutomationScriptVersionRestoreView.as_view(), name='playwright-automation-script-version-restore'),
+    path('playwright-automation-scripts/<str:script_id>/', views.PlaywrightAutomationScriptDetailView.as_view(), name='playwright-automation-script-detail'),
+    path('playwright-recordings/', views.PlaywrightRecordingSessionListView.as_view(), name='playwright-recording-list'),
+    path('playwright-recordings/settings/', views.PlaywrightRecordingSettingsView.as_view(), name='playwright-recording-settings'),
+    path('playwright-recordings/<str:session_id>/agent/', views.PlaywrightRecordingLocalAgentView.as_view(), name='playwright-recording-agent'),
+    path('playwright-recordings/<str:session_id>/agent/steps/', views.PlaywrightRecordingLocalAgentStepView.as_view(), name='playwright-recording-agent-steps'),
+    path('playwright-recordings/<str:session_id>/agent/status/', views.PlaywrightRecordingLocalAgentStatusView.as_view(), name='playwright-recording-agent-status'),
+    path('playwright-recordings/<str:session_id>/agent/stop/', views.PlaywrightRecordingLocalAgentStopView.as_view(), name='playwright-recording-agent-stop'),
+    path('playwright-recordings/<str:session_id>/identify-junk-steps/', views.PlaywrightRecordingSessionJunkStepsView.as_view(), name='playwright-recording-identify-junk-steps'),
+    path('playwright-recordings/<str:session_id>/steps/batch-delete/', views.PlaywrightRecordingStepBatchDeleteView.as_view(), name='playwright-recording-step-batch-delete'),
+    path('playwright-recordings/<str:session_id>/steps/<int:step_id>/', views.PlaywrightRecordingStepDetailView.as_view(), name='playwright-recording-step-detail'),
+    path('playwright-recordings/<str:session_id>/dedupe-snapshots/', views.PlaywrightRecordingSessionDedupeSnapshotsView.as_view(), name='playwright-recording-dedupe-snapshots'),
+    path('playwright-recordings/<str:session_id>/stop/', views.PlaywrightRecordingSessionStopView.as_view(), name='playwright-recording-stop'),
+    path('playwright-recordings/<str:session_id>/flow/', views.PlaywrightRecordingSessionFlowView.as_view(), name='playwright-recording-flow'),
+    path('playwright-recordings/<str:session_id>/create-flow/', views.PlaywrightRecordingSessionCreateFlowView.as_view(), name='playwright-recording-create-flow'),
+    path('playwright-recordings/<str:session_id>/', views.PlaywrightRecordingSessionDetailView.as_view(), name='playwright-recording-detail'),
+    path('visual-flows/', views.VisualFlowListView.as_view(), name='visual-flow-list'),
+    path('visual-flows/batch-copy/', views.VisualFlowBatchCopyView.as_view(), name='visual-flow-batch-copy'),
+    path('visual-flows/<str:flow_id>/copy/', views.VisualFlowCopyView.as_view(), name='visual-flow-copy'),
+    path('visual-flows/<str:flow_id>/', views.VisualFlowDetailView.as_view(), name='visual-flow-detail'),
+    path('visual-flow-executions/', views.VisualFlowExecutionListView.as_view(), name='visual-flow-execution-list'),
+    path('visual-flow-executions/<str:execution_id>/', views.VisualFlowExecutionDetailView.as_view(), name='visual-flow-execution-detail'),
+    path('visual-flow-executions/<str:execution_id>/events/', views.VisualFlowExecutionIngestView.as_view(), name='visual-flow-execution-events'),
+    path('visual-flow-executions/<str:execution_id>/finalize/', views.VisualFlowExecutionFinalizeView.as_view(), name='visual-flow-execution-finalize'),
+    path('playwright-execute/', views.PlaywrightScriptExecuteView.as_view(), name='playwright-execute'),
+]

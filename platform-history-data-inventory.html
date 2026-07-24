@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TestHub 平台历史数据统计清单</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d9dee7;
+      --head: #eef2f7;
+      --accent: #0f766e;
+      --zero: #f0fdf4;
+      --warn: #fff7ed;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+      line-height: 1.5;
+    }
+    main {
+      width: min(1280px, calc(100% - 48px));
+      margin: 28px auto 48px;
+    }
+    header {
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    section {
+      margin-top: 20px;
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 14px;
+    }
+    th,
+    td {
+      border: 1px solid var(--border);
+      padding: 9px 10px;
+      vertical-align: top;
+      word-break: break-word;
+    }
+    th {
+      background: var(--head);
+      text-align: left;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    td.count {
+      width: 180px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    tr.zero td {
+      background: var(--zero);
+    }
+    tr.large td {
+      background: var(--warn);
+    }
+    .note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .tag {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: var(--zero);
+      color: #166534;
+      font-size: 12px;
+      vertical-align: 1px;
+    }
+    @media print {
+      body { background: #fff; }
+      main { width: 100%; margin: 0; }
+      section { break-inside: avoid; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>TestHub 平台历史数据统计清单</h1>
+      <div class="meta">统计口径：当前 testhub-fresh-* 环境；只统计现存非空数据；本清单生成时未执行删除操作。</div>
+    </header>
+
+    <section>
+      <h2>页面 - 功能 - 数据</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 22%;">页面/模块</th>
+            <th style="width: 28%;">功能</th>
+            <th>当前数据统计</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>系统/权限</td><td>用户、角色、权限</td><td>用户 48，角色 8，用户组 5，权限项 333，角色权限 768</td></tr>
+          <tr class="zero"><td>系统/登录态</td><td>会话与 Token 历史</td><td>已清空：Django Session 0，Outstanding Token 0，Blacklisted Token 0 <span class="tag">已清理</span></td></tr>
+          <tr><td>项目管理</td><td>项目/成员/版本</td><td>项目 15，项目成员 37，版本 6</td></tr>
+          <tr><td>AI产品/AI会话</td><td>会话历史</td><td>AI会话 1，聊天消息 4，会话工作区 1</td></tr>
+          <tr class="large"><td>AI军火库</td><td>能力/资产/审计</td><td>能力 196，资产 225，资产版本 227，密钥 15，资产审计 143744，导入记录 51，审核记录 7</td></tr>
+          <tr><td>需求分析</td><td>文档/分析/配置</td><td>已清空：需求文档 0，需求分析 0；保留配置：AI模型配置 10，Prompt配置 14 <span class="tag">已清理</span></td></tr>
+          <tr class="zero"><td>AI会话研发对象</td><td>AI需求/开发任务/AI缺陷</td><td>已清空：AI需求 0，开发任务 0，AI缺陷 0 <span class="tag">已清理</span></td></tr>
+          <tr class="zero"><td>AI会话研发测试</td><td>测试用例/用例生成记录</td><td>已清空：生成测试用例 0，用例生成记录 0 <span class="tag">已清理</span></td></tr>
+          <tr><td>AI开发配置</td><td>仓库/模型/运行/构建配置</td><td>仓库配置 9，LLM配置 12，测试工具配置 7，运行配置 12，构建配置 7，总配置 8</td></tr>
+          <tr><td>思源/手工用例</td><td>用例、脑图、目录</td><td>测试用例 83，步骤 12，手工用例目录 240，脑图 164</td></tr>
+          <tr class="large"><td>录制</td><td>Playwright录制</td><td>录制会话 284，录制步骤 5805，自动化脚本 2，脚本版本 4</td></tr>
+          <tr><td>录制</td><td>可视化流程</td><td>流程 439，执行记录 43，执行步骤 386</td></tr>
+          <tr><td>缺陷管理</td><td>缺陷/历史/评论/附件</td><td>缺陷 303，变更历史 344，评论 3，附件 1，Wiki目录 1</td></tr>
+          <tr><td>UI自动化</td><td>项目/定位/脚本/套件/执行</td><td>项目 3，定位策略 12，脚本 3，套件 3，UI用例 3，步骤 3，执行 5</td></tr>
+          <tr><td>AI产品工作台/AI RD</td><td>工作区/页面/流程/测试意图</td><td>工作区 87，页面 685，系统流程 86，测试意图 59</td></tr>
+          <tr><td>AI产品工作台/AI RD</td><td>导入/生成/DSL</td><td>导入任务 8，生成运行 126，DSL版本 102</td></tr>
+          <tr><td>AI产品工作台/AI RD</td><td>Harness/交付/治理</td><td>Harness连接 27，交付包 27，门禁结果 28，回归套件 7，Handoff 16，审计 235，治理 25，产物 119，预览URL 24，快照 24</td></tr>
+          <tr><td>部署</td><td>目标/模板/制品/执行</td><td>部署目标 8，模板 10，构建制品 6，部署执行 13，执行事件 53</td></tr>
+          <tr><td>质量分析/Jira</td><td>JIRA历史数据</td><td>BUG记录 321，需求记录 255，JIRA配置 5，质量设置 1</td></tr>
+          <tr><td>工作流</td><td>定义/规则/实例/任务/日志</td><td>定义 3，规则 6，实例 2，任务 4，动作日志 8</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>文件数据</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>目录</th>
+            <th style="width: 24%;">文件数</th>
+            <th style="width: 24%;">大小</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="large"><td>.docker-data/testhub-platform-fresh/media/playwright_recordings</td><td class="count">4988</td><td class="count">1014.03 MB</td></tr>
+          <tr class="large"><td>.docker-data/testhub-platform-fresh/appdata/ai-rd-full-cycle-releases</td><td class="count">12</td><td class="count">2343.74 MB</td></tr>
+          <tr><td>.docker-data/testhub-platform-fresh/media/ai_rd_imports</td><td class="count">5</td><td class="count">258.69 MB</td></tr>
+          <tr><td>.docker-data/testhub-platform-fresh/media/visual_flow_executions</td><td class="count">359</td><td class="count">81.98 MB</td></tr>
+          <tr><td>.docker-data/testhub-platform-fresh/media/defect_rich_text_images</td><td class="count">403</td><td class="count">61.11 MB</td></tr>
+          <tr><td>.docker-data/testhub-platform-fresh/logs/django.log</td><td class="count">1</td><td class="count">48.85 MB</td></tr>
+          <tr class="zero"><td>.docker-data/testhub-platform-fresh/media/requirement_docs</td><td class="count">0</td><td class="count">0 MB</td></tr>
+          <tr><td>.docker-data/testhub-platform-fresh/media/assistant</td><td class="count">0</td><td class="count">0 MB</td></tr>
+          <tr><td>Redis</td><td class="count">9 keys</td><td class="count">-</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>接口 - 数据</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 34%;">接口前缀</th>
+            <th>对应数据</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>/api/auth/，/api/users/</td><td>用户、角色、权限、登录态 Token</td></tr>
+          <tr><td>/api/projects/，/api/versions/</td><td>项目、成员、版本</td></tr>
+          <tr><td>/api/assistant/</td><td>AI会话、AI军火库能力、资产、导入/审核/审计记录</td></tr>
+          <tr><td>/api/requirement-analysis/api/</td><td>需求文档 0、需求分析 0；AI模型配置、Prompt配置保留；AI需求/生成用例/生成任务已为 0</td></tr>
+          <tr><td>/api/ai-development/</td><td>AI开发配置；任务和AI缺陷已为 0</td></tr>
+          <tr><td>/api/testcases/</td><td>手工用例、脑图、录制、可视化流程、执行记录</td></tr>
+          <tr><td>/api/defects/</td><td>缺陷、评论、历史、附件、Wiki、邮件配置</td></tr>
+          <tr><td>/api/ui-automation/</td><td>UI自动化项目、脚本、套件、用例、执行</td></tr>
+          <tr><td>/api/ai-rd-platform/，/api/ai-products/workbench/</td><td>AI产品工作台工作区、页面、流程、测试意图、生成运行、交付治理</td></tr>
+          <tr><td>/api/deployments/</td><td>部署目标、模板、制品、执行、事件</td></tr>
+          <tr><td>/api/quality-analysis/</td><td>JIRA BUG/需求记录、质量分析配置</td></tr>
+          <tr><td>/api/workflow/</td><td>工作流定义、规则、实例、任务、动作日志</td></tr>
+          <tr class="zero"><td>/api/api-testing/，/api/reviews/，/api/reports/，/api/executions/</td><td>当前没有非空业务数据进入统计清单</td></tr>
+        </tbody>
+      </table>
+      <p class="note">说明：接口前缀按后端路由归类，数据项按当前非空模型和文件目录统计聚合。</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 会话生成软件使用手册</title>
+  <style>
+    :root {
+      --manual-ink: #13243a;
+      --manual-text: #26384f;
+      --manual-muted: #66758a;
+      --manual-line: #d8e1ec;
+      --manual-soft: #f4f7fb;
+      --manual-panel: #ffffff;
+      --manual-blue: #1456f0;
+      --manual-green: #07845f;
+      --manual-amber: #a25d12;
+      --manual-red: #b42318;
+      --manual-cyan: #087ea4;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: #eef3f8;
+      color: var(--manual-text);
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+      line-height: 1.72;
+    }
+
+    .ai-session-manual {
+      min-height: 100vh;
+      color: var(--manual-text);
+    }
+
+    .ai-session-manual a {
+      color: var(--manual-blue);
+      text-decoration: none;
+    }
+
+    .ai-session-manual a:hover {
+      text-decoration: underline;
+    }
+
+    .manual-shell {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      max-width: 1520px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: var(--manual-panel);
+    }
+
+    .manual-nav {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      padding: 28px 22px;
+      border-right: 1px solid var(--manual-line);
+      background: #f9fbfd;
+      overflow: auto;
+    }
+
+    .manual-nav__brand {
+      padding-bottom: 20px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--manual-line);
+    }
+
+    .manual-nav__brand strong {
+      display: block;
+      color: var(--manual-ink);
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .manual-nav__brand span {
+      display: block;
+      margin-top: 8px;
+      color: var(--manual-muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .manual-nav a {
+      display: block;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: #34465c;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .manual-nav a:hover {
+      background: #edf3fb;
+      text-decoration: none;
+    }
+
+    .manual-content {
+      min-width: 0;
+      padding: 38px 46px 64px;
+    }
+
+    .manual-hero {
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--manual-line);
+    }
+
+    .manual-kicker {
+      margin: 0 0 10px;
+      color: var(--manual-blue);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .manual-hero h1 {
+      margin: 0;
+      color: var(--manual-ink);
+      font-size: 34px;
+      line-height: 1.24;
+      letter-spacing: 0;
+    }
+
+    .manual-hero p {
+      max-width: 920px;
+      margin: 14px 0 0;
+      color: var(--manual-muted);
+      font-size: 15px;
+    }
+
+    .manual-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .manual-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 1px solid #cbd8e6;
+      border-radius: 6px;
+      background: #fff;
+      color: #3a4d63;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .manual-section {
+      padding: 36px 0 0;
+      scroll-margin-top: 22px;
+    }
+
+    .manual-section h2 {
+      margin: 0 0 12px;
+      color: var(--manual-ink);
+      font-size: 25px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    .manual-section h3 {
+      margin: 26px 0 10px;
+      color: var(--manual-ink);
+      font-size: 18px;
+      line-height: 1.42;
+      letter-spacing: 0;
+    }
+
+    .manual-section p {
+      margin: 0 0 12px;
+    }
+
+    .manual-lede {
+      max-width: 980px;
+      color: var(--manual-muted);
+      font-size: 15px;
+    }
+
+    .manual-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .manual-grid--two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .manual-card {
+      border: 1px solid var(--manual-line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .manual-card h3,
+    .manual-card h4 {
+      margin: 0 0 8px;
+      color: var(--manual-ink);
+      font-size: 16px;
+      line-height: 1.4;
+      letter-spacing: 0;
+    }
+
+    .manual-card p {
+      margin: 0;
+      color: var(--manual-muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .manual-tag {
+      display: inline-flex;
+      align-items: center;
+      margin: 0 6px 8px 0;
+      padding: 3px 8px;
+      border-radius: 5px;
+      background: #eef5ff;
+      color: #184eaf;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .manual-tag--green {
+      background: #e9f7f1;
+      color: var(--manual-green);
+    }
+
+    .manual-tag--amber {
+      background: #fff4e5;
+      color: var(--manual-amber);
+    }
+
+    .manual-tag--red {
+      background: #fff0ee;
+      color: var(--manual-red);
+    }
+
+    .manual-steps {
+      counter-reset: manual-step;
+      display: grid;
+      gap: 12px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .manual-steps li {
+      counter-increment: manual-step;
+      position: relative;
+      padding: 14px 16px 14px 52px;
+      border: 1px solid var(--manual-line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .manual-steps li::before {
+      content: counter(manual-step);
+      position: absolute;
+      left: 16px;
+      top: 14px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--manual-blue);
+      color: #fff;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 24px;
+    }
+
+    .manual-steps strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--manual-ink);
+    }
+
+    .manual-steps span {
+      display: block;
+      color: var(--manual-muted);
+      font-size: 13px;
+    }
+
+    .manual-table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+      border: 1px solid var(--manual-line);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    .manual-table th,
+    .manual-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--manual-line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .manual-table th {
+      background: #f4f8fc;
+      color: var(--manual-ink);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .manual-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .manual-table td {
+      color: #40536a;
+    }
+
+    .manual-figure {
+      margin: 18px 0 26px;
+      border: 1px solid var(--manual-line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .manual-figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #f7f9fc;
+    }
+
+    .manual-figure figcaption {
+      padding: 10px 14px;
+      border-top: 1px solid var(--manual-line);
+      color: var(--manual-muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .manual-callout {
+      margin: 18px 0;
+      padding: 14px 16px;
+      border-left: 4px solid var(--manual-blue);
+      border-radius: 6px;
+      background: #f3f7ff;
+      color: #2b4059;
+      font-size: 14px;
+    }
+
+    .manual-callout--warning {
+      border-left-color: var(--manual-amber);
+      background: #fff8ed;
+    }
+
+    .manual-callout--success {
+      border-left-color: var(--manual-green);
+      background: #eefbf5;
+    }
+
+    .manual-list {
+      margin: 10px 0 0;
+      padding-left: 20px;
+    }
+
+    .manual-list li {
+      margin: 6px 0;
+      color: #40536a;
+    }
+
+    .manual-metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .manual-metric {
+      padding: 14px;
+      border: 1px solid var(--manual-line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .manual-metric strong {
+      display: block;
+      color: var(--manual-ink);
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .manual-metric span {
+      display: block;
+      margin-top: 5px;
+      color: var(--manual-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    code {
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: #edf2f7;
+      color: #1b3f72;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 0.92em;
+    }
+
+    .manual-footer {
+      margin-top: 42px;
+      padding-top: 20px;
+      border-top: 1px solid var(--manual-line);
+      color: var(--manual-muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1100px) {
+      .manual-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .manual-nav {
+        position: relative;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--manual-line);
+      }
+
+      .manual-nav nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px;
+      }
+
+      .manual-content {
+        padding: 30px 24px 48px;
+      }
+
+      .manual-grid,
+      .manual-grid--two,
+      .manual-metrics {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .manual-content {
+        padding: 24px 16px 40px;
+      }
+
+      .manual-hero h1 {
+        font-size: 26px;
+      }
+
+      .manual-section h2 {
+        font-size: 21px;
+      }
+
+      .manual-nav nav {
+        grid-template-columns: 1fr;
+      }
+
+      .manual-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      .manual-steps li {
+        padding-left: 44px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .manual-shell {
+        display: block;
+        max-width: none;
+      }
+
+      .manual-nav {
+        display: none;
+      }
+
+      .manual-content {
+        padding: 0;
+      }
+
+      .manual-section,
+      .manual-figure,
+      .manual-card {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="ai-session-manual">
+    <div class="manual-shell">
+      <aside class="manual-nav" aria-label="使用手册目录">
+        <div class="manual-nav__brand">
+          <strong>AI 会话生成软件</strong>
+          <span>企业级 AI 研发工作平台使用手册</span>
+        </div>
+        <nav>
+          <a href="#positioning">产品定位</a>
+          <a href="#session-types">选择会话类型</a>
+          <a href="#quick-start">快速开始</a>
+          <a href="#full-case">完整案例</a>
+          <a href="#clarification">需求澄清</a>
+          <a href="#project">项目澄清</a>
+          <a href="#workspace">会话详情工作区</a>
+          <a href="#design-style">设计风格</a>
+          <a href="#toolbox">AI 工具箱能力</a>
+          <a href="#acceptance">结果验收</a>
+          <a href="#faq">常见问题</a>
+          <a href="#integration">官网整合建议</a>
+        </nav>
+      </aside>
+
+      <article class="manual-content">
+        <header class="manual-hero">
+          <p class="manual-kicker">BearAI / TestHub AI 产品模块</p>
+          <h1>AI 会话生成软件使用手册</h1>
+          <p>
+            本手册面向产品经理、业务人员、需求分析师、测试人员、研发负责人和开发工程师，说明如何从 AI 产品入口创建会话，
+            通过项目澄清、需求澄清、基线需求分析、业务逻辑、原型、测试设计、设计风格和应用实现，把一句话想法推进为可追溯、可验证的研发产物。
+          </p>
+          <div class="manual-meta" aria-label="手册元信息">
+            <span class="manual-pill">入口：AI 产品</span>
+            <span class="manual-pill">案例会话：170</span>
+            <span class="manual-pill">案例主题：客户反馈管理系统</span>
+            <span class="manual-pill">截图来源：http://localhost:42080</span>
+            <span class="manual-pill">更新时间：2026-07-04</span>
+          </div>
+        </header>
+
+        <section id="positioning" class="manual-section">
+          <h2>产品定位</h2>
+          <p class="manual-lede">
+            AI 会话生成软件不是普通聊天窗口，而是围绕真实软件研发过程组织的 AI 工作台。它把用户输入、文件、Prompt、Skill、Agent、MCP、
+            会话环境、工作区文件和可运行产物绑定到同一个会话，让每一步产物都能回看、复用和验收。
+          </p>
+          <div class="manual-grid">
+            <section class="manual-card">
+              <h3>面向业务入口</h3>
+              <p>业务人员可以从一句话、用户故事、已有原型或普通对话开始，不需要先写完整 PRD。</p>
+            </section>
+            <section class="manual-card">
+              <h3>面向专业研发</h3>
+              <p>平台按项目澄清、需求澄清、需求分析、业务逻辑、原型、测试、实现组织链路，减少“直接写代码”的失控风险。</p>
+            </section>
+            <section class="manual-card">
+              <h3>面向企业治理</h3>
+              <p>会话详情页保留基线、工作区、文件、快照、代码预览、产品预览和执行记录，便于审计、交接和二次迭代。</p>
+            </section>
+          </div>
+        </section>
+
+        <section id="session-types" class="manual-section">
+          <h2>先选择哪个会话类型</h2>
+          <p class="manual-lede">
+            会话类型代表不同用户能力、不同输入成熟度和不同自动化深度。选择正确入口，可以减少后续澄清成本。
+          </p>
+          <figure class="manual-figure">
+            <img src="assets/ai-session-manual/01-ai-product-entry.png" alt="AI 产品入口和会话类型筛选">
+            <figcaption>AI 产品入口：页面提供“一句话生成应用、一句话需求、从需求澄清开始、已有原型图、对话”等场景入口与历史产品会话。</figcaption>
+          </figure>
+
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th>会话类型</th>
+                <th>适合谁</th>
+                <th>典型输入</th>
+                <th>平台会做什么</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>一句话生成应用</strong></td>
+                <td>希望快速得到可运行产品的业务负责人、售前、产品经理。</td>
+                <td>“做一个客户反馈管理系统，支持提交反馈、客服处理、分类统计。”</td>
+                <td>自动串联项目澄清、需求澄清、基线需求分析、基线业务逻辑、原型、测试分析、自动化用例、设计风格和产品实现。</td>
+              </tr>
+              <tr>
+                <td><strong>一句话需求</strong></td>
+                <td>只知道一个用户故事或业务问题，但需要专业需求分析结果的人。</td>
+                <td>“作为客服主管，我希望能看到超时未处理反馈，以便及时催办。”</td>
+                <td>先把故事拆成角色、目标、业务对象、规则、异常、验收标准和测试关注点，再沉淀为需求澄清与基线分析。</td>
+              </tr>
+              <tr>
+                <td><strong>从需求澄清开始</strong></td>
+                <td>已有初步需求说明，想跳过从零发散、直接进入确认与基线化的需求人员。</td>
+                <td>需求片段、会议纪要、待确认需求清单。</td>
+                <td>围绕需求条目打磨、重写、补充验收点、接受或不接受，并继续生成脑图、业务逻辑、原型和测试。</td>
+              </tr>
+              <tr>
+                <td><strong>已有原型图</strong></td>
+                <td>已有 Axure、HTML 原型、截图或页面说明的产品/交互人员。</td>
+                <td>原型 ZIP、HTML、截图、页面目录或交互说明。</td>
+                <td>优先从原型解析页面、组件、入口、状态和业务流，再生成需求分析、测试分析和业务逻辑。</td>
+              </tr>
+              <tr>
+                <td><strong>对话</strong></td>
+                <td>需要探索、咨询、分析资料或临时调用能力的用户。</td>
+                <td>问题、资料、文件、代码片段、分析请求。</td>
+                <td>保持通用 AI 对话能力，可手动选择 Prompt、Skill、Agent、MCP、文件和会话对象作为上下文。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="quick-start" class="manual-section">
+          <h2>五分钟快速开始</h2>
+          <ol class="manual-steps">
+            <li>
+              <strong>进入 AI 产品</strong>
+              <span>打开平台后进入“AI 产品”，在顶部输入框描述要生成或分析的软件需求。</span>
+            </li>
+            <li>
+              <strong>选择会话类型</strong>
+              <span>新手或业务人员优先选择“一句话生成应用”；已有用户故事但不急着生成系统时选择“一句话需求”。</span>
+            </li>
+            <li>
+              <strong>发送需求</strong>
+              <span>需求可以很短，但最好包含业务对象、使用角色、核心处理动作和统计/验收目标。</span>
+            </li>
+            <li>
+              <strong>进入会话详情</strong>
+              <span>点击生成出的产品会话，进入 AI 会话详情页，在左侧查看链路执行状态，在右侧查看各工作区产物。</span>
+            </li>
+            <li>
+              <strong>按产物验收</strong>
+              <span>先确认需求澄清和业务逻辑是否符合真实业务，再看原型、测试设计、设计风格和产品预览。</span>
+            </li>
+          </ol>
+          <figure class="manual-figure">
+            <img src="assets/ai-session-manual/03-one-click-app-input.png" alt="一句话生成应用输入区域">
+            <figcaption>输入一句话应用需求后，平台会创建 AI 会话并进入全链路执行。</figcaption>
+          </figure>
+        </section>
+
+        <section id="full-case" class="manual-section">
+          <h2>完整案例：客户反馈管理系统</h2>
+          <p class="manual-lede">
+            本手册截图使用最新案例会话 <code>170</code>：客户反馈管理系统。该会话已完成项目澄清、需求澄清、基线需求分析、基线业务逻辑、原型、
+            测试分析、自动化测试用例和设计风格选择，产品实现环节因 Codex CLI 执行错误停在失败状态，因此更适合作为“研发链路和产物治理”示例。
+          </p>
+          <figure class="manual-figure">
+            <img src="assets/ai-session-manual/04-session-detail-overview.png" alt="AI 会话详情页总览">
+            <figcaption>AI 会话详情页：左侧是自动链路执行记录，右侧是工作区页签。当前案例展示每一步是否完成、失败或需要继续处理。</figcaption>
+          </figure>
+
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th>链路阶段</th>
+                <th>核心产物</th>
+                <th>使用重点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>项目澄清</td>
+                <td>项目范围、角色、对象、规则、风险、下一步研发输入。</td>
+                <td>一句话生成应用会自动接受项目澄清结果并保存为项目基线；复杂项目可手工继续打磨。</td>
+              </tr>
+              <tr>
+                <td>需求澄清</td>
+                <td>可选择、可编辑、可接受、可不接受的需求条目。</td>
+                <td>确认产品目标、角色与业务对象、页面功能、验收标准、风险和待澄清问题。</td>
+              </tr>
+              <tr>
+                <td>基线需求分析</td>
+                <td>页面功能、原子功能、测试种子、追踪矩阵。</td>
+                <td>把需求转成后续业务逻辑、原型和测试可以消费的结构化输入。</td>
+              </tr>
+              <tr>
+                <td>基线业务逻辑</td>
+                <td>业务流程图、状态流转、数据流、权限、异常补偿。</td>
+                <td>验证生成的是当前业务系统的流程，而不是历史示例或开发过程图。</td>
+              </tr>
+              <tr>
+                <td>原型与测试</td>
+                <td>可预览 HTML 原型、测试分析、自动化测试用例。</td>
+                <td>从页面、交互、边界、权限、异常、数据一致性等角度检查实现前质量。</td>
+              </tr>
+              <tr>
+                <td>设计风格</td>
+                <td>风格档案、Design Token、页面模板、视觉验收要求。</td>
+                <td>把企业稳健、金融精密、工程深色等风格约束带入产品实现。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="manual-metrics" aria-label="基线需求分析案例数据">
+            <div class="manual-metric"><strong>7</strong><span>页面节点</span></div>
+            <div class="manual-metric"><strong>24</strong><span>功能节点</span></div>
+            <div class="manual-metric"><strong>21</strong><span>原子功能</span></div>
+            <div class="manual-metric"><strong>59</strong><span>原子测试种子</span></div>
+            <div class="manual-metric"><strong>11/11</strong><span>合同维度覆盖</span></div>
+          </div>
+        </section>
+
+        <section id="clarification" class="manual-section">
+          <h2>需求澄清：把模糊需求变成可开发基线</h2>
+          <p class="manual-lede">
+            需求澄清是本平台最核心的体验入口之一。它不是单纯让 AI 写一段需求说明，而是把需求拆成可选择、可编辑、可追踪、可验收的结构化条目。
+          </p>
+          <figure class="manual-figure">
+            <img src="assets/ai-session-manual/05-requirement-clarification.png" alt="需求澄清工作区">
+            <figcaption>需求澄清工作区：支持选择需求项、批量打磨、批量重写、接受需求、应用更新、不接受需求，并把结果沉淀为后续基线。</figcaption>
+          </figure>
+
+          <div class="manual-grid manual-grid--two">
+            <section class="manual-card">
+              <h3>单条需求操作</h3>
+              <p>每个需求节点可以查看平台建议、手工编辑、继续打磨、重写、接受需求、不接受需求。重写用于替换当前条目，打磨用于产生更细的子需求或验收点。</p>
+            </section>
+            <section class="manual-card">
+              <h3>批量需求操作</h3>
+              <p>多选需求后可以批量打磨、批量重写或接受需求。适合把用户故事、会议纪要、业务描述一次性整理成可进入研发链路的需求基线。</p>
+            </section>
+            <section class="manual-card">
+              <h3>接受与不接受</h3>
+              <p>接受需求后，该需求会成为后续基线分析、业务逻辑、原型、测试和实现的稳定输入；不接受需求会从保存基线时排除，避免无依据功能进入实现。</p>
+            </section>
+            <section class="manual-card">
+              <h3>进入基线需求分析</h3>
+              <p>已接受需求会继续转为页面、模块、功能、原子功能、验收标准和测试点。脑图节点可用于继续细化测试点，并可同步回需求澄清项。</p>
+            </section>
+          </div>
+
+          <h3>从“只有用户故事”开始的推荐流程</h3>
+          <ol class="manual-steps">
+            <li>
+              <strong>选择“一句话需求”</strong>
+              <span>输入用户故事，例如“作为客服主管，我希望查看超时未处理反馈，以便及时催办”。</span>
+            </li>
+            <li>
+              <strong>让 AI 拆解故事</strong>
+              <span>平台会识别角色、业务目标、触发条件、业务对象、页面功能、规则、异常和验收标准。</span>
+            </li>
+            <li>
+              <strong>在需求澄清中确认</strong>
+              <span>对 AI 拆出的条目逐项打磨、重写、接受或不接受，把口语化故事变成专业需求。</span>
+            </li>
+            <li>
+              <strong>生成基线分析和测试种子</strong>
+              <span>接受后的需求会进入基线需求分析，用于生成页面功能、原子功能、追踪矩阵和测试点。</span>
+            </li>
+          </ol>
+        </section>
+
+        <section id="project" class="manual-section">
+          <h2>项目澄清：先定边界，再进入研发</h2>
+          <p class="manual-lede">
+            项目澄清用于在需求进入实现前确认项目层面的稳定信息。当前已实现能力包括项目范围、角色、业务对象、规则、风险和下一步研发输入的结构化澄清，
+            以及空仓库新项目综合澄清中的启动澄清、架构约束、非功能基线、多端兼容、质量策略、工程交付和项目治理。
+          </p>
+          <div class="manual-callout manual-callout--warning">
+            手册只描述当前已落地能力。技术架构设计 Prompt、非功能基线 Prompt、多端兼容 Prompt、架构评审 Skill 等会作为后续推荐能力或可调用能力出现，
+            不把它们写成项目澄清弹框里已经独立实现的操作入口。
+          </div>
+          <div class="manual-grid">
+            <section class="manual-card">
+              <h3>项目源头标准化</h3>
+              <p>把一句话、文件或项目澄清材料抽取为角色、业务对象、页面、功能、状态、规则、数据、接口、报表和权限边界。</p>
+            </section>
+            <section class="manual-card">
+              <h3>项目澄清打磨重写</h3>
+              <p>围绕单个项目澄清项继续细化或替换，输出可选择、可验收、可保存到项目基线的结构化结果。</p>
+            </section>
+            <section class="manual-card">
+              <h3>项目基线沉淀</h3>
+              <p>确认后的项目澄清会保存为项目基线，供后续需求基线、需求分析、业务逻辑、测试分析和产品实现复用。</p>
+            </section>
+          </div>
+        </section>
+
+        <section id="workspace" class="manual-section">
+          <h2>AI 会话详情工作区</h2>
+          <p class="manual-lede">
+            AI 会话详情页是 AI 产品页面跳转后的工作区，不涉及思源质量平台知识库助手的 AI 会话功能。这里的一二级页签就是 AI 研发对象选择弹框的对象来源，
+            如果某个页签下有子对象，也可以继续选择子对象作为上下文。
+          </p>
+
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th>一级页签</th>
+                <th>二级对象</th>
+                <th>用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>项目</td>
+                <td>项目澄清、项目基线</td>
+                <td>确认项目范围、角色、业务对象、约束和后续研发输入。</td>
+              </tr>
+              <tr>
+                <td>需求</td>
+                <td>需求澄清、基线需求分析、基线业务逻辑</td>
+                <td>把需求从口语描述推进到结构化基线、脑图和可编辑业务逻辑图。</td>
+              </tr>
+              <tr>
+                <td>原型预览</td>
+                <td>AI 原型、Axure 原型</td>
+                <td>查看 AI 生成原型或导入原型，作为需求、测试和开发依据。</td>
+              </tr>
+              <tr>
+                <td>原型需求分析</td>
+                <td>原型需求分析、原型业务逻辑</td>
+                <td>从已有原型解析页面、组件、交互和业务流程。</td>
+              </tr>
+              <tr>
+                <td>测试设计</td>
+                <td>测试分析、自动化测试用例</td>
+                <td>生成等价类、边界值、状态转换、权限、异常、数据一致性等测试设计。</td>
+              </tr>
+              <tr>
+                <td>设计风格</td>
+                <td>页面设计风格</td>
+                <td>选择视觉风格、Design Token、页面模板和视觉验收要求。</td>
+              </tr>
+              <tr>
+                <td>产品预览</td>
+                <td>产品预览</td>
+                <td>查看可访问的生成应用或预览服务。</td>
+              </tr>
+              <tr>
+                <td>工作区</td>
+                <td>工作区文件、工作区快照</td>
+                <td>查看会话文件、代码资产、快照、恢复点和治理对象。</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <figure class="manual-figure">
+            <img src="assets/ai-session-manual/11-session-workspace.png" alt="AI 会话工作区文件和治理对象">
+            <figcaption>工作区页签：用于查看当前会话生成的文件、快照、交付资产和治理信息。</figcaption>
+          </figure>
+        </section>
+
+        <section id="design-style" class="manual-section">
+          <h2>设计风格：把视觉约束带入开发</h2>
+          <p class="manual-lede">
+            设计风格页签位于产品预览前面，用于在开发实现前确定页面风格。开发 Agent 会读取所选风格档案，把 Design Token、页面模板和视觉验收要求写入实现提示。
+          </p>
+          <figure class="manual-figure">
+            <img src="assets/ai-session-manual/10-design-style.png" alt="AI 设计风格页签">
+            <figcaption>设计风格页签：可选择企业稳健、工程深色、金融精密、清爽协作、AI 实验室等风格，并查看页面预览和 Design Token。</figcaption>
+          </figure>
+          <div class="manual-grid">
+            <section class="manual-card">
+              <h3>风格选择</h3>
+              <p>根据软件类型选择风格，例如管理后台优先“企业稳健”，数据运营可选“金融精密”，开发工具可选“工程深色”。</p>
+            </section>
+            <section class="manual-card">
+              <h3>复制研发指令</h3>
+              <p>把选中风格转换为 AI 开发提示，确保后续代码实现遵守色彩、密度、圆角、字体和页面模板要求。</p>
+            </section>
+            <section class="manual-card">
+              <h3>保存设计档案</h3>
+              <p>保存后可在当前会话和后续开发环节复用，形成可追踪的项目设计基线。</p>
+            </section>
+          </div>
+        </section>
+
+        <section id="toolbox" class="manual-section">
+          <h2>AI 工具箱能力</h2>
+          <p class="manual-lede">
+            AI 会话可以从工具箱选择不同类型能力。能力不是越多越好，推荐按当前任务选择必要能力，避免上下文过载。
+          </p>
+          <div class="manual-grid manual-grid--two">
+            <section class="manual-card">
+              <h3>Prompt</h3>
+              <p>适合固定格式的分析、总结、审查、生成任务，例如项目源头标准化、测试分析提示。</p>
+            </section>
+            <section class="manual-card">
+              <h3>Skill</h3>
+              <p>适合带规则、步骤和输出合约的专业能力，例如需求澄清打磨重写、基线需求分析、业务逻辑分析。</p>
+            </section>
+            <section class="manual-card">
+              <h3>Agent</h3>
+              <p>适合需要决策、检查和串联多步动作的能力，例如源头门禁 Agent 用于检查字段完整性和阻塞项。</p>
+            </section>
+            <section class="manual-card">
+              <h3>Flow</h3>
+              <p>适合固定流程编排，例如从澄清、架构、测试、缺陷闭环到部署交付的长链路。</p>
+            </section>
+            <section class="manual-card">
+              <h3>MCP</h3>
+              <p>适合让 AI 安全读取外部上下文或平台上下文，例如只读读取当前会话的项目基线、需求基线和文件摘要。</p>
+            </section>
+            <section class="manual-card">
+              <h3>Tool</h3>
+              <p>适合执行具体工具动作，例如文件、浏览器、测试、部署或工作区相关操作。</p>
+            </section>
+          </div>
+        </section>
+
+        <section id="acceptance" class="manual-section">
+          <h2>生成结果如何验收</h2>
+          <p class="manual-lede">
+            企业级 AI 开发不能只看“有没有生成页面”。建议按需求、流程、原型、测试、风格、代码和运行状态逐层验收。
+          </p>
+          <figure class="manual-figure">
+            <img src="assets/ai-session-manual/07-business-logic.png" alt="客户反馈管理系统基线业务逻辑图">
+            <figcaption>基线业务逻辑图：当前案例正确显示客户反馈管理系统的业务流程，而不是历史图书馆管理系统示例。</figcaption>
+          </figure>
+          <figure class="manual-figure">
+            <img src="assets/ai-session-manual/08-prototype-preview.png" alt="应用原型预览">
+            <figcaption>原型预览：在开发实现前检查页面结构、交互入口、字段、状态和核心流程。</figcaption>
+          </figure>
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th>验收层</th>
+                <th>检查问题</th>
+                <th>不通过时怎么处理</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>需求层</td>
+                <td>需求是否来自当前会话输入？是否有无依据新增？是否覆盖角色、对象、规则、异常和验收标准？</td>
+                <td>回到需求澄清，重写或不接受错误需求，再重新生成后续产物。</td>
+              </tr>
+              <tr>
+                <td>业务逻辑层</td>
+                <td>流程图是否描述当前系统真实业务？是否包含状态流转、权限、异常和补偿？</td>
+                <td>重新调用基线业务逻辑 Skill，并明确要求读取当前项目/需求基线。</td>
+              </tr>
+              <tr>
+                <td>原型层</td>
+                <td>页面、字段、操作、状态和提示是否能支撑核心业务流？</td>
+                <td>回到原型或需求澄清补充页面与交互，再更新测试设计。</td>
+              </tr>
+              <tr>
+                <td>测试层</td>
+                <td>是否覆盖等价类、边界值、状态转换、权限、异常和数据一致性？</td>
+                <td>在测试分析中继续细化原子测试点，避免一个测试点验证多个条件。</td>
+              </tr>
+              <tr>
+                <td>风格层</td>
+                <td>实现是否符合所选设计风格、Design Token、页面密度和视觉验收要求？</td>
+                <td>回到设计风格页签重新选择或复制研发指令，再让开发 Agent 修正。</td>
+              </tr>
+              <tr>
+                <td>运行层</td>
+                <td>产品预览是否可访问？容器、数据库、接口和持久化是否正常？</td>
+                <td>查看产品实现日志、工作区文件和代码预览，定位构建、启动或运行错误。</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="faq" class="manual-section">
+          <h2>常见问题与处理</h2>
+          <div class="manual-grid manual-grid--two">
+            <section class="manual-card">
+              <h3>提示“加载工具箱能力失败”</h3>
+              <p>通常是能力资产或会话环境接口加载失败。刷新页面前先确认登录态仍有效；若只影响能力列表，可继续查看已生成产物。</p>
+            </section>
+            <section class="manual-card">
+              <h3>提示“加载会话环境失败”</h3>
+              <p>会话环境加载失败会影响模型、工具和上下文选择。建议重新进入 AI 产品页或会话详情页，确认当前会话环境仍存在。</p>
+            </section>
+            <section class="manual-card">
+              <h3>突然跳到登录页</h3>
+              <p>同一浏览器应共用一套登录态。若仍出现跳转，多数与本地 token 被清空、浏览器隔离配置或刷新失败有关，重新登录后再打开多个页签验证。</p>
+            </section>
+            <section class="manual-card">
+              <h3>业务逻辑图显示不对</h3>
+              <p>先检查图中业务对象和页面是否来自当前会话。如果出现历史系统内容，回到基线业务逻辑环节重新生成，并要求读取当前会话项目/需求基线。</p>
+            </section>
+            <section class="manual-card">
+              <h3>产品实现失败</h3>
+              <p>查看左侧链路失败卡片、AI 消息、代码预览和工作区文件。失败并不影响前序需求、业务逻辑、原型和测试产物继续复用。</p>
+            </section>
+            <section class="manual-card">
+              <h3>不知道该从哪里开始</h3>
+              <p>只想咨询选“对话”；只有故事选“一句话需求”；想快速产出系统选“一句话生成应用”；已有需求选“从需求澄清开始”；已有原型选“已有原型图”。</p>
+            </section>
+          </div>
+        </section>
+
+        <section id="integration" class="manual-section">
+          <h2>官网整合建议</h2>
+          <p class="manual-lede">
+            本页面是静态 HTML，不依赖 CDN、构建工具或后端接口。官网可直接以 iframe 嵌入，也可以抽取正文、样式和截图资源整合到官网文档中心。
+          </p>
+          <div class="manual-callout manual-callout--success">
+            建议官网整合时保留左侧目录、场景选择表、快速开始、完整案例和常见问题五个部分；截图资源保持相对路径，便于版本化维护。
+          </div>
+          <ul class="manual-list">
+            <li>HTML 文件：<code>docs/ai-session-software-user-manual.html</code></li>
+            <li>截图目录：<code>docs/assets/ai-session-manual/</code></li>
+            <li>样式作用域：主要样式都在 <code>.ai-session-manual</code> 容器下，便于迁移。</li>
+            <li>案例来源：本地 <code>testhub-fresh-*</code> 服务，AI 产品会话 <code>170</code>。</li>
+          </ul>
+        </section>
+
+        <footer class="manual-footer">
+          <p>本手册基于当前本地平台已实现能力编写。未在平台中形成明确入口或可验证交互的能力，不作为正式操作步骤描述。</p>
+        </footer>
+      </article>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,216 @@
+name: ${COMPOSE_PROJECT_NAME:-testhub-fake-remote}
+
+services:
+  testhub-mysql:
+    image: local/testhub-mysql-bundle:8.0
+    container_name: ${CONTAINER_PREFIX:-testhub-fake-remote}-mysql
+    restart: unless-stopped
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-testhub}
+      MYSQL_USER: ${MYSQL_USER:-testhub}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-testhub123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+    ports:
+      - "${MYSQL_HOST_PORT:-53306}:3306"
+    volumes:
+      - testhub_fake_remote_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  testhub-redis:
+    image: local/testhub-redis-bundle:7-alpine
+    container_name: ${CONTAINER_PREFIX:-testhub-fake-remote}-redis
+    restart: unless-stopped
+    command: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$${REDIS_PASSWORD}\""]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-1234}
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "${REDIS_HOST_PORT:-56379}:6379"
+    volumes:
+      - testhub_fake_remote_redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  testhub-backend-init:
+    image: local/testhub-platform-backend-bundle:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_PREFIX:-testhub-fake-remote}-backend-init
+    restart: "no"
+    command: ["init"]
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-backend.settings_container}
+      DEBUG: ${DEBUG:-False}
+      APP_PORT: "8000"
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-fake-remote}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,testhub-frontend,host.docker.internal}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:51080,http://127.0.0.1:51080}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:51080,http://127.0.0.1:51080}
+      DB_NAME: ${MYSQL_DATABASE:-testhub}
+      DB_USER: ${MYSQL_USER:-testhub}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-testhub123}
+      DB_HOST: testhub-mysql
+      DB_PORT: "3306"
+      REDIS_URL: redis://:${REDIS_PASSWORD:-1234}@testhub-redis:6379/0
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@testhub.local}
+      INIT_SEED_BUNDLE_DIR: /app/init-seed
+      INIT_SEED_MARKER_FILE: /app/data/.init-seed-imported
+      APP_INIT_MARKER_FILE: /app/data/.app-init-complete
+      IMPORT_INIT_SEED: ${IMPORT_INIT_SEED:-0}
+      FORCE_INIT_SEED: ${FORCE_INIT_SEED:-0}
+      INIT_SEED_COPY_MEDIA: ${INIT_SEED_COPY_MEDIA:-0}
+      COLLECTSTATIC_ON_INIT: ${COLLECTSTATIC_ON_INIT:-1}
+      RUN_INIT_LOCATOR_STRATEGIES: ${RUN_INIT_LOCATOR_STRATEGIES:-1}
+      CREATE_ADMIN_USER: ${CREATE_ADMIN_USER:-1}
+    depends_on:
+      testhub-mysql:
+        condition: service_healthy
+      testhub-redis:
+        condition: service_healthy
+    volumes:
+      - testhub_fake_remote_appdata:/app/data
+      - testhub_fake_remote_media:/app/media
+      - testhub_fake_remote_static:/app/static
+      - testhub_fake_remote_logs:/app/logs
+
+  testhub-backend:
+    image: local/testhub-platform-backend-bundle:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_PREFIX:-testhub-fake-remote}-backend
+    restart: unless-stopped
+    command: ["web"]
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-backend.settings_container}
+      DEBUG: ${DEBUG:-False}
+      APP_PORT: "8000"
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-fake-remote}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,testhub-frontend,host.docker.internal}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:51080,http://127.0.0.1:51080}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:51080,http://127.0.0.1:51080}
+      DB_NAME: ${MYSQL_DATABASE:-testhub}
+      DB_USER: ${MYSQL_USER:-testhub}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-testhub123}
+      DB_HOST: testhub-mysql
+      DB_PORT: "3306"
+      REDIS_URL: redis://:${REDIS_PASSWORD:-1234}@testhub-redis:6379/0
+      DOCKER_HOST: unix:///var/run/docker.sock
+      INIT_SEED_MARKER_FILE: /app/data/.init-seed-imported
+      APP_INIT_MARKER_FILE: /app/data/.app-init-complete
+      WAIT_FOR_APP_INIT: ${WAIT_FOR_APP_INIT:-1}
+    depends_on:
+      testhub-mysql:
+        condition: service_healthy
+      testhub-redis:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_HOST_PORT:-58000}:8000"
+    volumes:
+      - testhub_fake_remote_appdata:/app/data
+      - testhub_fake_remote_media:/app/media
+      - testhub_fake_remote_static:/app/static
+      - testhub_fake_remote_logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  testhub-celery-worker:
+    image: local/testhub-platform-backend-bundle:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_PREFIX:-testhub-fake-remote}-celery-worker
+    restart: unless-stopped
+    command: ["worker"]
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-backend.settings_container}
+      DEBUG: ${DEBUG:-False}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-fake-remote}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,testhub-frontend,host.docker.internal}
+      DB_NAME: ${MYSQL_DATABASE:-testhub}
+      DB_USER: ${MYSQL_USER:-testhub}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-testhub123}
+      DB_HOST: testhub-mysql
+      DB_PORT: "3306"
+      REDIS_URL: redis://:${REDIS_PASSWORD:-1234}@testhub-redis:6379/0
+      CELERY_LOG_LEVEL: ${CELERY_LOG_LEVEL:-info}
+      CELERY_QUEUE: ${CELERY_QUEUE:-celery,deployments}
+      CELERY_POOL: ${CELERY_POOL:-}
+      CELERY_CONCURRENCY: ${CELERY_CONCURRENCY:-}
+      DEPLOYMENT_CELERY_QUEUE: ${DEPLOYMENT_CELERY_QUEUE:-deployments}
+      APP_INIT_MARKER_FILE: /app/data/.app-init-complete
+      WAIT_FOR_APP_INIT: ${WAIT_FOR_APP_INIT:-1}
+    depends_on:
+      testhub-mysql:
+        condition: service_healthy
+      testhub-redis:
+        condition: service_healthy
+    volumes:
+      - testhub_fake_remote_appdata:/app/data
+      - testhub_fake_remote_media:/app/media
+      - testhub_fake_remote_static:/app/static
+      - testhub_fake_remote_logs:/app/logs
+
+  testhub-ai-dev-worker:
+    image: local/testhub-platform-backend-bundle:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_PREFIX:-testhub-fake-remote}-ai-dev-worker
+    restart: unless-stopped
+    command: ["worker"]
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-backend.settings_container}
+      DEBUG: ${DEBUG:-False}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-fake-remote}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,testhub-frontend,host.docker.internal}
+      DB_NAME: ${MYSQL_DATABASE:-testhub}
+      DB_USER: ${MYSQL_USER:-testhub}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-testhub123}
+      DB_HOST: testhub-mysql
+      DB_PORT: "3306"
+      REDIS_URL: redis://:${REDIS_PASSWORD:-1234}@testhub-redis:6379/0
+      DOCKER_HOST: unix:///var/run/docker.sock
+      CELERY_LOG_LEVEL: ${AIDEV_CELERY_LOG_LEVEL:-info}
+      CELERY_QUEUE: ${AIDEV_CELERY_QUEUE:-ai_coding}
+      CELERY_POOL: ${AIDEV_CELERY_POOL:-}
+      CELERY_CONCURRENCY: ${AIDEV_CELERY_CONCURRENCY:-1}
+      APP_INIT_MARKER_FILE: /app/data/.app-init-complete
+      WAIT_FOR_APP_INIT: ${WAIT_FOR_APP_INIT:-1}
+      AIDEV_RUNTIME_IMAGE: ${AIDEV_RUNTIME_IMAGE:-testhub/ai-dev:latest}
+    depends_on:
+      testhub-mysql:
+        condition: service_healthy
+      testhub-redis:
+        condition: service_healthy
+    volumes:
+      - testhub_fake_remote_appdata:/app/data
+      - testhub_fake_remote_media:/app/media
+      - testhub_fake_remote_static:/app/static
+      - testhub_fake_remote_logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  testhub-frontend:
+    image: local/testhub-platform-frontend-bundle:${IMAGE_TAG:-latest}
+    container_name: ${CONTAINER_PREFIX:-testhub-fake-remote}-frontend
+    restart: unless-stopped
+    depends_on:
+      - testhub-backend
+    ports:
+      - "${FRONTEND_HOST_PORT:-51080}:80"
+
+volumes:
+  testhub_fake_remote_mysql:
+  testhub_fake_remote_redis:
+  testhub_fake_remote_appdata:
+  testhub_fake_remote_media:
+  testhub_fake_remote_static:
+  testhub_fake_remote_logs:

@@ -1,0 +1,87 @@
+version: "2.4"
+
+services:
+  testhub-backend-init:
+    image: ${BACKEND_IMAGE:-local/testhub-platform-backend-bundle:latest}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.protected.Dockerfile
+      args:
+        PROTECTED_CODE_IMAGE: ${PROTECTED_CODE_IMAGE:-local/testhub-platform-backend-protected-code:latest}
+        BACKEND_RUNTIME_BASE: ${BACKEND_CORE_RUNTIME_BASE:-local/testhub-platform-backend-core-runtime:latest}
+
+  testhub-backend:
+    image: ${BACKEND_IMAGE:-local/testhub-platform-backend-bundle:latest}
+
+  testhub-automation-service:
+    image: ${AUTOMATION_IMAGE:-local/testhub-platform-automation-service-protected:latest}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.protected-automation.Dockerfile
+      args:
+        PROTECTED_CODE_IMAGE: ${PROTECTED_CODE_IMAGE:-local/testhub-platform-backend-protected-code:latest}
+        BACKEND_RUNTIME_BASE: ${AUTOMATION_RUNTIME_BASE:-local/testhub-platform-backend-automation-runtime:latest}
+
+  testhub-document-service:
+    image: ${DOCUMENT_IMAGE:-local/testhub-platform-document-service-protected:latest}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.protected-service.Dockerfile
+      args:
+        PROTECTED_CODE_IMAGE: ${PROTECTED_CODE_IMAGE:-local/testhub-platform-backend-protected-code:latest}
+        BACKEND_RUNTIME_BASE: ${DOCUMENT_RUNTIME_BASE:-local/testhub-platform-backend-document-runtime:latest}
+        TESTHUB_RUNTIME_ROLE: document
+
+  testhub-asset-service:
+    image: ${ASSET_IMAGE:-local/testhub-platform-asset-service-protected:latest}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.protected-service.Dockerfile
+      args:
+        PROTECTED_CODE_IMAGE: ${PROTECTED_CODE_IMAGE:-local/testhub-platform-backend-protected-code:latest}
+        BACKEND_RUNTIME_BASE: ${ASSET_RUNTIME_BASE:-local/testhub-platform-backend-asset-runtime:latest}
+        TESTHUB_RUNTIME_ROLE: asset
+
+  testhub-integration-service:
+    image: ${INTEGRATION_IMAGE:-local/testhub-platform-integration-service-protected:latest}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.protected-service.Dockerfile
+      args:
+        PROTECTED_CODE_IMAGE: ${PROTECTED_CODE_IMAGE:-local/testhub-platform-backend-protected-code:latest}
+        BACKEND_RUNTIME_BASE: ${INTEGRATION_RUNTIME_BASE:-local/testhub-platform-backend-integration-runtime:latest}
+        TESTHUB_RUNTIME_ROLE: integration
+
+  testhub-report-service:
+    image: ${REPORT_IMAGE:-local/testhub-platform-report-service-protected:latest}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.protected-service.Dockerfile
+      args:
+        PROTECTED_CODE_IMAGE: ${PROTECTED_CODE_IMAGE:-local/testhub-platform-backend-protected-code:latest}
+        BACKEND_RUNTIME_BASE: ${REPORT_RUNTIME_BASE:-local/testhub-platform-backend-report-runtime:latest}
+        TESTHUB_RUNTIME_ROLE: report
+
+  testhub-deployment-service:
+    image: ${DEPLOYMENT_IMAGE:-local/testhub-platform-deployment-worker-protected:latest}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.protected-deployment.Dockerfile
+      args:
+        PROTECTED_CODE_IMAGE: ${PROTECTED_CODE_IMAGE:-local/testhub-platform-backend-protected-code:latest}
+        BACKEND_RUNTIME_BASE: ${DEPLOYMENT_RUNTIME_BASE:-local/testhub-platform-backend-deployment-runtime:latest}
+
+  testhub-asset-worker:
+    image: ${ASSET_IMAGE:-local/testhub-platform-asset-service-protected:latest}
+
+  testhub-deployment-worker:
+    image: ${DEPLOYMENT_IMAGE:-local/testhub-platform-deployment-worker-protected:latest}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backend.protected-deployment.Dockerfile
+      args:
+        PROTECTED_CODE_IMAGE: ${PROTECTED_CODE_IMAGE:-local/testhub-platform-backend-protected-code:latest}
+        BACKEND_RUNTIME_BASE: ${DEPLOYMENT_RUNTIME_BASE:-local/testhub-platform-backend-deployment-runtime:latest}
+
+  testhub-ai-dev-worker:
+    image: ${INTEGRATION_IMAGE:-local/testhub-platform-integration-service-protected:latest}

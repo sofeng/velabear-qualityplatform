@@ -1,0 +1,33 @@
+请求 URL：http://172.31.119.34:8080/rest/issueNav/1/issueTable
+请求方法：POST
+请求标头：
+__amdmodulename
+jira/issue/utils/xsrf-token-header
+accept
+*/*
+accept-encoding
+gzip, deflate
+accept-language
+zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+connection
+keep-alive
+content-length
+1504
+content-type
+application/x-www-form-urlencoded; charset=UTF-8
+cookie
+seraph.rememberme.cookie=21537%3Af94e4b6896599b9e0fab7a3a0b3d86d765ef4e0a; atlassian.xsrf.token=BYAD-0586-UEY0-GUQV|ac2d3e63651efedad8852ca6cd3069a649039c55|lin; JSESSIONID=3F4093AC153C08047C70416F21B0EEB2
+host
+172.31.119.34:8080
+origin
+http://172.31.119.34:8080
+referer
+http://172.31.119.34:8080/issues/?filter=15943
+user-agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0
+x-atlassian-token
+no-check
+x-requested-with
+XMLHttpRequest
+表单数据：
+startIndex=0&filterId=15943&jql=project+%3D+SYSWIN+AND+issuetype+in+(%E4%BB%BB%E5%8A%A1%2C+%E5%AE%9E%E6%96%BD%E9%9C%80%E6%B1%82%EF%BC%88%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91%EF%BC%89%2C+%E5%AE%9E%E6%96%BD%E9%9C%80%E6%B1%82%EF%BC%88%E5%90%88%E5%90%8C%E5%86%85%EF%BC%89%2C+%E6%A0%87%E5%87%86%E5%8C%96%E9%9C%80%E6%B1%82%2C+%E5%AD%90%E4%BB%BB%E5%8A%A1-%E9%9C%80%E6%B1%82%E5%88%86%E6%8B%86)+AND+status+in+(%E4%BA%A7%E5%93%81%E9%9C%80%E6%B1%82%E5%BE%85%E6%8E%A5%E6%94%B6%2C+%E4%BA%A7%E5%93%81%E8%A7%84%E5%88%92%E8%AE%BE%E8%AE%A1%E4%B8%AD%2C+%E4%BA%A7%E5%93%81%E8%AE%BE%E8%AE%A1%E5%AE%8C%E6%88%90%2C+%E5%BE%85%E5%90%AF%E5%8A%A8%E7%A0%94%E5%8F%91%E4%BB%BB%E5%8A%A1%2C+%E5%8A%9F%E8%83%BD%E7%A0%94%E5%8F%91%E4%B8%AD%2C+%E7%A0%94%E5%8F%91%E6%8A%80%E6%9C%AF%E8%AF%84%E5%AE%A1%2C+%E4%BB%A3%E7%A0%81%E5%BC%80%E5%8F%91%E5%AE%8C%E6%88%90%2C+%E5%8A%9F%E8%83%BD%E6%B5%8B%E8%AF%95%E4%B8%AD%2C+%E6%B5%8B%E8%AF%95%E5%AE%8C%E6%88%90%E5%BE%85%E5%8F%91%E7%89%88%2C+%E5%BC%80%E5%8F%91%E4%BB%BB%E5%8A%A1%E5%AE%8C%E7%BB%93%2C+%E9%9C%80%E6%B1%82%E6%8A%A5%E5%91%8A%E4%BA%BA%E9%AA%8C%E6%94%B6%E4%B8%AD%2C+%E5%B7%B2%E4%BA%A4%E4%BB%98%E4%B8%8A%E7%BA%BF%2C+%E5%B7%B2%E5%85%B3%E9%97%AD%E9%97%AE%E9%A2%98%2C+%E5%B7%B2%E6%8C%82%E8%B5%B7%E9%97%AE%E9%A2%98)+AND+fixVersion+%3D+26-04.15%E5%8F%91%E7%89%88%EF%BC%888.2.0%EF%BC%89+ORDER+BY+cf%5B10761%5D+DESC%2C+cf%5B10747%5D+DESC%2C+cf%5B10741%5D+ASC%2C+key+ASC%2C+cf%5B10762%5D+DESC%2C+reporter+ASC%2C+assignee+ASC%2C+cf%5B10708%5D+ASC%2C+issuetype+DESC%2C+cf%5B10738%5D+DESC&layoutKey=list-view

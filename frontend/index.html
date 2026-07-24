@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>BearAI - Enterprise-grade AI Software Development Platform</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- KityMinder dependencies (按依赖顺序加载) -->
+    <script src="/kity.min.js"></script>
+    <script src="/kityminder.core.min.js"></script>
+    <!-- 移除 kityminder.editor.js，因为它依赖 Angular 且我们不使用它的 Receiver -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

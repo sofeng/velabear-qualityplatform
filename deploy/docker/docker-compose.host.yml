@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  testhub-platform-backend:
+    image: local/testhub-platform-backend:20260319
+    container_name: testhub-platform-backend
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      DJANGO_SETTINGS_MODULE: backend.settings_deploy
+      APP_PORT: "38000"
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: Testhub@20260319
+      ADMIN_EMAIL: admin@testhub.local
+    volumes:
+      - ./backend-data:/app/data
+
+  testhub-platform-frontend:
+    image: local/testhub-platform-frontend:20260319
+    container_name: testhub-platform-frontend
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - testhub-platform-backend

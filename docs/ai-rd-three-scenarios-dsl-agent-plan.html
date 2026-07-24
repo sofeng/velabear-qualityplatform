@@ -1,0 +1,2087 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI研发平台三业务场景、三智能体、DSL 与 Skill 工厂规划</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --panel-soft: #f9fbff;
+      --line: #d9e2ef;
+      --line-strong: #b8c7dd;
+      --text: #172033;
+      --muted: #5f6f86;
+      --primary: #1d4ed8;
+      --primary-soft: #e8f0ff;
+      --success: #047857;
+      --warning: #b45309;
+      --danger: #b91c1c;
+      --purple: #6d28d9;
+      --shadow: 0 12px 28px rgba(22, 32, 51, 0.08);
+      --radius: 8px;
+      --aside-width: 332px;
+      --font: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+      --mono: "Cascadia Code", Consolas, "SFMono-Regular", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.65;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: var(--aside-width) minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      border-right: 1px solid var(--line);
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 20px 20px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .doc-label {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .sidebar-title {
+      margin: 12px 0 6px;
+      font-size: 20px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .sidebar-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tree {
+      flex: 1;
+      overflow: auto;
+      padding: 12px 12px 24px;
+    }
+
+    .tree-group {
+      margin: 4px 0;
+      border-radius: var(--radius);
+    }
+
+    .tree-toggle {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 8px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .tree-toggle:hover {
+      background: var(--panel-soft);
+    }
+
+    .tree-chevron {
+      width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      transform: rotate(90deg);
+      transition: transform 0.16s ease;
+    }
+
+    .tree-group.is-collapsed .tree-chevron {
+      transform: rotate(0deg);
+    }
+
+    .tree-items {
+      padding: 2px 0 6px 27px;
+    }
+
+    .tree-group.is-collapsed .tree-items {
+      display: none;
+    }
+
+    .tree-link {
+      display: block;
+      padding: 6px 8px;
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      border-left: 2px solid transparent;
+    }
+
+    .tree-link:hover {
+      color: var(--text);
+      background: var(--panel-soft);
+    }
+
+    .tree-link.active {
+      color: var(--primary);
+      background: var(--primary-soft);
+      border-left-color: var(--primary);
+      font-weight: 700;
+    }
+
+    .content-scroll {
+      height: 100vh;
+      overflow: auto;
+      scroll-padding-top: 24px;
+    }
+
+    .content {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 32px 40px 80px;
+    }
+
+    .hero {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 22px;
+    }
+
+    .hero h1 {
+      margin: 10px 0 12px;
+      font-size: 30px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 920px;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 18px 0;
+      padding: 26px 28px;
+    }
+
+    .section h2 {
+      margin: 0 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 24px;
+      line-height: 1.3;
+      letter-spacing: 0;
+    }
+
+    .section h3 {
+      margin: 24px 0 10px;
+      font-size: 18px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    .section h4 {
+      margin: 18px 0 8px;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .section p {
+      margin: 9px 0;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .callout {
+      margin: 14px 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--primary);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .callout strong {
+      color: var(--primary);
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      padding: 14px;
+    }
+
+    .card h3,
+    .card h4 {
+      margin-top: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+
+    .badge.p0 {
+      color: #fff;
+      background: var(--danger);
+    }
+
+    .badge.p1 {
+      color: #fff;
+      background: var(--warning);
+    }
+
+    .badge.p2 {
+      color: #fff;
+      background: var(--success);
+    }
+
+    .badge.dsl {
+      color: var(--purple);
+      background: #f2ebff;
+      border-color: #d9c7ff;
+    }
+
+    .badge.scene {
+      color: var(--primary);
+      background: var(--primary-soft);
+      border-color: #c7d7ff;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin: 12px 0;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 920px;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #eef4ff;
+      color: #24324a;
+      font-weight: 700;
+      z-index: 1;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    ul,
+    ol {
+      padding-left: 22px;
+      margin: 8px 0 12px;
+    }
+
+    li {
+      margin: 5px 0;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 0.93em;
+      padding: 1px 5px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--panel-soft);
+      color: #334155;
+    }
+
+    pre {
+      margin: 12px 0;
+      padding: 14px;
+      border-radius: var(--radius);
+      background: #111827;
+      color: #dbeafe;
+      overflow: auto;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .timeline {
+      border-left: 3px solid var(--line);
+      padding-left: 18px;
+      margin: 14px 0;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding: 0 0 18px;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -26px;
+      top: 5px;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--primary);
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 20px 0 0;
+    }
+
+    .mobile-menu-button {
+      display: none;
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 10;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      background: var(--primary);
+      box-shadow: var(--shadow);
+      font-family: var(--font);
+      font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+      .app-shell {
+        display: block;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 20;
+        width: min(86vw, var(--aside-width));
+        transform: translateX(-102%);
+        transition: transform 0.2s ease;
+        box-shadow: var(--shadow);
+      }
+
+      body.menu-open .sidebar {
+        transform: translateX(0);
+      }
+
+      .content-scroll {
+        height: auto;
+        overflow: visible;
+      }
+
+      .content {
+        padding: 20px 14px 80px;
+      }
+
+      .hero,
+      .section {
+        padding: 18px;
+      }
+
+      .grid.two,
+      .grid.three {
+        grid-template-columns: 1fr;
+      }
+
+      .mobile-menu-button {
+        display: inline-flex;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="文档目录">
+      <div class="sidebar-header">
+        <span class="doc-label">规划文档</span>
+        <h1 class="sidebar-title">AI研发平台三场景、DSL 与 Skill 工厂规划</h1>
+        <p class="sidebar-subtitle">左侧目录树导航，右侧滚动阅读；企业原型编辑器 DSL 不纳入本规划。</p>
+      </div>
+      <nav class="tree" id="treeNav">
+        <div class="tree-group">
+          <button class="tree-toggle" type="button"><span class="tree-chevron">›</span><span>0. 总览</span></button>
+          <div class="tree-items">
+            <a class="tree-link" href="#summary">规划结论</a>
+            <a class="tree-link" href="#priority-principle">优先级原则</a>
+          </div>
+        </div>
+        <div class="tree-group">
+          <button class="tree-toggle" type="button"><span class="tree-chevron">›</span><span>1. 三条业务场景</span></button>
+          <div class="tree-items">
+            <a class="tree-link" href="#scene-overview">场景总览</a>
+            <a class="tree-link" href="#scene-one">场景一：Axure 导入企业研发</a>
+            <a class="tree-link" href="#scene-two">场景二：人工澄清自动研发</a>
+            <a class="tree-link" href="#scene-three">场景三：全自动行业产品</a>
+          </div>
+        </div>
+        <div class="tree-group">
+          <button class="tree-toggle" type="button"><span class="tree-chevron">›</span><span>2. DSL 工程化</span></button>
+          <div class="tree-items">
+            <a class="tree-link" href="#dsl-positioning">DSL 定位</a>
+            <a class="tree-link" href="#dsl-layering">DSL 分层模型</a>
+            <a class="tree-link" href="#dsl-governance">版本、校验与追溯</a>
+            <a class="tree-link" href="#dsl-contract">统一契约示例</a>
+          </div>
+        </div>
+        <div class="tree-group">
+          <button class="tree-toggle" type="button"><span class="tree-chevron">›</span><span>3. 三个智能体</span></button>
+          <div class="tree-items">
+            <a class="tree-link" href="#agent-overview">智能体总览</a>
+            <a class="tree-link" href="#agent-enterprise">企业原型导入智能体</a>
+            <a class="tree-link" href="#agent-supervised">人工澄清自动研发智能体</a>
+            <a class="tree-link" href="#agent-autonomous">行业产品全自动智能体</a>
+          </div>
+        </div>
+        <div class="tree-group">
+          <button class="tree-toggle" type="button"><span class="tree-chevron">›</span><span>4. 功能任务与优先级</span></button>
+          <div class="tree-items">
+            <a class="tree-link" href="#p0">P0：企业主线与 DSL 底座</a>
+            <a class="tree-link" href="#p1">P1：自动研发与移动端</a>
+            <a class="tree-link" href="#p2">P2：行业产品工厂</a>
+          </div>
+        </div>
+        <div class="tree-group">
+          <button class="tree-toggle" type="button"><span class="tree-chevron">›</span><span>5. 行业模板与 Skill 工厂</span></button>
+          <div class="tree-items">
+            <a class="tree-link" href="#skill-factory-positioning">能力定位</a>
+            <a class="tree-link" href="#skill-factory-architecture">架构边界</a>
+            <a class="tree-link" href="#skill-runtime">独立运行时</a>
+            <a class="tree-link" href="#skill-contracts">Skill 契约</a>
+            <a class="tree-link" href="#platform-adapters">外部底座适配</a>
+            <a class="tree-link" href="#industry-template-plan">模板库实施</a>
+          </div>
+        </div>
+        <div class="tree-group">
+          <button class="tree-toggle" type="button"><span class="tree-chevron">›</span><span>6. 前后端规范</span></button>
+          <div class="tree-items">
+            <a class="tree-link" href="#frontend">前端设计与交互约束</a>
+            <a class="tree-link" href="#backend">后端接口与数据约束</a>
+            <a class="tree-link" href="#mobile">移动端入口规范</a>
+          </div>
+        </div>
+        <div class="tree-group">
+          <button class="tree-toggle" type="button"><span class="tree-chevron">›</span><span>7. 实施路线</span></button>
+          <div class="tree-items">
+            <a class="tree-link" href="#roadmap">阶段路线图</a>
+            <a class="tree-link" href="#acceptance">验收标准</a>
+            <a class="tree-link" href="#risks">关键风险</a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="content-scroll" id="contentScroll">
+      <div class="content">
+        <header class="hero" id="top">
+          <span class="doc-label">AI研发平台 · 完整规划</span>
+          <h1>三条用户业务场景、三个智能体、DSL 工程化与 Skill 工厂工作规划</h1>
+          <p>
+            本规划将 Axure 导入企业研发、人机协同自动研发、全自动行业产品生成三条入口明确拆开，同时把 TestHub AI RD DSL 升级为贯穿需求、原型、流程、测试、代码、部署、治理和 Skill 生成的工程语义契约。行业模板与快速出成品能力采用平台内置入口、独立 Skill Runtime、可插拔外部底座适配的组合；企业原型编辑器 DSL 不属于本规划范围。
+          </p>
+          <div class="meta-row">
+            <span class="meta-chip">版本：v1.1</span>
+            <span class="meta-chip">日期：2026-06-01</span>
+            <span class="meta-chip">主线优先级：To B Axure 导入企业研发优先</span>
+            <span class="meta-chip">交付形态：单页 HTML 文档</span>
+          </div>
+        </header>
+
+        <section class="section" id="summary">
+          <h2>0.1 规划结论</h2>
+          <p class="lead">
+            平台需要形成三条清晰入口，而不是把所有能力放在一个页面内平铺。三条入口可以共用底层 DSL、AI 会话、工作区治理、AI 开发、自动化测试和 Harness 交付能力，但产品入口、用户路径、智能体编排、权限与交付门禁必须分开。
+          </p>
+          <div class="grid three">
+            <div class="card">
+              <h3><span class="badge p0">P0</span>企业主线</h3>
+              <p>Axure/Figma/HTML 已有原型导入，转成 TestHub AI RD DSL，经确认后进入需求追溯、测试、开发、Harness 部署。这是 To B 主打核心竞争力。</p>
+            </div>
+            <div class="card">
+              <h3><span class="badge p1">P1</span>人机协同自动研发</h3>
+              <p>一句话需求，人工澄清项目和需求，平台自动需求分析、原型、开发、测试、部署。适合有明确项目意向、愿意沟通确认的用户。</p>
+            </div>
+            <div class="card">
+              <h3><span class="badge p2">P2</span>全自动行业产品</h3>
+              <p>用户只给行业或通用软件方向，由 AI 自动澄清、套行业模板、生成成品。当前 AI 会话已有部分能力，但需要更强模板、门禁和沙箱治理。</p>
+            </div>
+          </div>
+          <div class="callout">
+            <strong>核心判断：</strong>DSL 优化不是独立功能，而是三条业务场景的共同工程底座。没有 DSL，智能体只能输出文本和代码；有了可校验、可版本化、可追溯的 DSL，平台才能做到企业级可控、可审计、可交付。
+          </div>
+          <div class="callout">
+            <strong>行业模板与 Skill 判断：</strong>场景三的快速出成品能力应采用“平台内置入口 + 独立 Skill Runtime + 可插拔 Skill Adapter”的组合。平台掌握业务场景、项目资产、DSL、权限、审计和交付，生成引擎与外部低代码底座通过服务化和插件化接入，避免主平台变成某个低代码产品的二次封装。
+          </div>
+        </section>
+
+        <section class="section" id="priority-principle">
+          <h2>0.2 优先级原则</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>优先级</th>
+                  <th>业务判断</th>
+                  <th>工程判断</th>
+                  <th>结果要求</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge p0">P0</span></td>
+                  <td>企业客户已经有需求基线和 Axure 原型，最愿意为导入、追溯、开发、测试、部署闭环付费。</td>
+                  <td>先补齐 DSL 底座、导入确认、版本基线、追溯、Harness 交付，避免功能散乱。</td>
+                  <td>形成可演示、可试点、可签约的企业级主线。</td>
+                </tr>
+                <tr>
+                  <td><span class="badge p1">P1</span></td>
+                  <td>人机协同自动研发适合个人、创业团队、小型内部系统，移动端入口价值明显。</td>
+                  <td>复用 P0 DSL 与 Agent 编排，新增项目/需求澄清卡片、移动端流程和自动开发串联。</td>
+                  <td>形成 To C/轻量团队产品化入口。</td>
+                </tr>
+                <tr>
+                  <td><span class="badge p2">P2</span></td>
+                  <td>全自动行业产品具备想象空间，但对模板库、质量门禁、行业资产依赖最高。</td>
+                  <td>必须建立行业 DSL 模板、沙箱隔离、自动评测和发布审核后再扩大。</td>
+                  <td>形成行业软件工厂，不影响 P0/P1 稳定性。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="scene-overview">
+          <h2>1.1 三条业务场景总览</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>场景</th>
+                  <th>入口定位</th>
+                  <th>目标用户</th>
+                  <th>主要终端</th>
+                  <th>核心产物</th>
+                  <th>优先级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>场景一：Axure 导入企业研发</td>
+                  <td>首页独立入口：导入已有原型开始项目</td>
+                  <td>企业产品经理、研发经理、测试经理、交付经理</td>
+                  <td>PC Web 为主，移动端只做查看与审批</td>
+                  <td>导入工作区、DSL 基线、需求追溯、测试意图、开发任务、Harness 交付包</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td>场景二：人工澄清自动研发</td>
+                  <td>首页独立入口：一句话需求开始，人工确认各阶段</td>
+                  <td>有明确项目意向的个人用户、创业团队、企业内部小系统负责人</td>
+                  <td>移动端入口优先，PC Web 承接详情编辑</td>
+                  <td>项目基线、需求基线、原型、代码、测试、部署记录</td>
+                  <td><span class="badge p1">P1</span></td>
+                </tr>
+                <tr>
+                  <td>场景三：全自动行业产品</td>
+                  <td>首页独立入口：选择行业或一句话生成通用成品</td>
+                  <td>没有明确沟通意愿、只要通用行业软件的用户</td>
+                  <td>移动端入口优先，PC Web 做预览与接管</td>
+                  <td>行业模板实例、自动生成应用、沙箱预览、质量报告</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="scene-one">
+          <h2>1.2 场景一：Axure 导入企业研发</h2>
+          <p class="lead">这是 To B 主战场。用户不是从“想法”开始，而是已经有项目基线、需求基线和 Axure 原型，平台要承担从原型资产到工程交付的企业级转换、治理和执行。</p>
+          <h3>目标对齐</h3>
+          <ul>
+            <li>把 Axure/Figma/HTML 原型从静态资料变成可追溯、可测试、可开发、可部署的 AI RD 工作区。</li>
+            <li>将原型页面、组件、交互、业务流程映射到 DSL，再由 DSL 生成测试意图、开发任务和部署合同。</li>
+            <li>保留企业用户的人工确认、审批、版本基线、审计和回滚能力。</li>
+          </ul>
+          <h3>端到端链路</h3>
+          <div class="timeline">
+            <div class="timeline-item"><strong>导入准备：</strong>创建企业原型导入工作区，选择项目、版本、业务域、导入源和环境。</div>
+            <div class="timeline-item"><strong>原型解析：</strong>解析 Axure HTML ZIP、页面层级、组件、交互链接、表单、表格、弹窗和资源。</div>
+            <div class="timeline-item"><strong>DSL 转换：</strong>生成 <code>prototype_dsl</code>、<code>page_dsl</code>、<code>flow_dsl</code> 和初始 <code>test_intent_dsl</code>。</div>
+            <div class="timeline-item"><strong>人工确认：</strong>页面树、组件识别、流程边、需求映射、排除范围和优先级确认。</div>
+            <div class="timeline-item"><strong>研发执行：</strong>生成实现计划、代码任务、自动化测试、缺陷闭环和交付包。</div>
+            <div class="timeline-item"><strong>Harness 交付：</strong>基于现有 Harness 能力触发流水线、回写执行结果、生成交付报告。</div>
+          </div>
+          <h3>必须补齐的功能</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>功能</th>
+                  <th>能力</th>
+                  <th>上游</th>
+                  <th>下游</th>
+                  <th>优先级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>独立首页入口</td>
+                  <td>入口明确标识“导入已有原型开始企业研发”，不与一句话需求混用。</td>
+                  <td>首页导航、权限、项目列表</td>
+                  <td>AI RD 工作区</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td>导入解析与确认台</td>
+                  <td>文件上传、解析状态、页面树、组件识别、交互识别、原型预览、确认写入 DSL。</td>
+                  <td>Axure/Figma/HTML 资产</td>
+                  <td>DSL 版本、工作区页面</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td>需求追溯映射</td>
+                  <td>页面/组件/流程边绑定需求、验收标准、优先级和业务规则。</td>
+                  <td>需求基线、导入页面</td>
+                  <td>测试意图、开发任务、交付报告</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td>企业交付门禁</td>
+                  <td>检查 DSL 完整性、需求覆盖率、测试覆盖率、代码任务状态、Harness 可交付状态。</td>
+                  <td>DSL、测试、开发、部署配置</td>
+                  <td>交付包、Harness handoff</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td>企业审计与回滚</td>
+                  <td>DSL 版本 diff、版本回滚、导入批次审计、人工确认记录、交付包快照。</td>
+                  <td>工作区操作</td>
+                  <td>治理报告、问题追责</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="scene-two">
+          <h2>1.3 场景二：人工澄清自动研发</h2>
+          <p class="lead">该场景从一句话需求开始，但用户愿意确认项目和需求。它适合作为 To C 或轻量团队产品入口，移动端是主要触达入口，PC Web 做深度编辑和交付查看。</p>
+          <h3>链路</h3>
+          <p><code>一句话需求 -> 人工澄清项目 -> 人工澄清需求 -> 自动需求分析 -> 自动出原型 -> 自动开发 -> 自动测试 -> 自动部署发布</code></p>
+          <h3>需要与 DSL 的关系</h3>
+          <ul>
+            <li>项目澄清结果进入 <code>project_dsl</code>。</li>
+            <li>需求澄清结果进入 <code>requirement_dsl</code>。</li>
+            <li>自动原型进入 <code>prototype_dsl/page_dsl</code>。</li>
+            <li>自动测试进入 <code>test_intent_dsl</code>。</li>
+            <li>自动开发进入 <code>implementation_dsl</code>。</li>
+            <li>自动部署进入 <code>delivery_dsl</code>。</li>
+          </ul>
+          <h3>优先实现范围</h3>
+          <div class="grid two">
+            <div class="card">
+              <h4><span class="badge p1">P1</span>移动端入口</h4>
+              <p>移动端首页突出“一句话创建应用”，以卡片式问答和阶段状态为主，不承载复杂编辑器。</p>
+            </div>
+            <div class="card">
+              <h4><span class="badge p1">P1</span>人工确认门禁</h4>
+              <p>项目基线、需求基线、原型确认、开发执行、部署发布均要有确认点，避免 AI 直接越权执行高风险动作。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="scene-three">
+          <h2>1.4 场景三：全自动行业产品</h2>
+          <p class="lead">这个场景当前平台 AI 会话已经具备一部分“从需求到成品”的能力，但要产品化，必须补行业模板、沙箱隔离、自动评测和发布门禁。</p>
+          <h3>链路</h3>
+          <p><code>一句话/行业选择 -> AI 自动澄清 -> 套用行业模板 DSL -> 自动生成原型/代码/测试 -> 沙箱预览 -> 质量评估 -> 用户接管或发布</code></p>
+          <h3>行业模板 DSL 是关键</h3>
+          <ul>
+            <li>不能让 AI 每次凭空生成行业系统，需要沉淀行业模板：CRM、物业、进销存、工单、审批、人事、资产、内容管理等。</li>
+            <li>行业模板应包含默认角色、页面、数据模型、流程、测试集、部署建议和合规模板。</li>
+            <li>该场景优先做移动端轻入口，企业级深度交付仍回到场景一的工作区治理。</li>
+          </ul>
+          <div class="callout">
+            <strong>架构判断：</strong>行业模板和快速出成品能力要作为 AI研发平台的一等入口呈现，但底层不能硬编码在主平台后端。平台负责场景入口、智能体、DSL、治理、审计和交付；生成执行、外部底座适配和重型构建任务应通过独立 Skill Runtime 服务承载；CRUD、表单、流程、报表、驾驶舱、移动端、交付等能力以独立 Skill 插件注册。
+          </div>
+          <h3>可借鉴的生成底座</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>方向</th>
+                  <th>候选能力</th>
+                  <th>适用产物</th>
+                  <th>接入定位</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>代码生成与企业后台</td>
+                  <td>JEECG Boot / JEECG Skills、RuoYi、JHipster、ABP</td>
+                  <td>CRUD、主子表、权限菜单、后台管理、企业应用源码</td>
+                  <td>优先作为 P2 的代码生成适配器，不绑定为平台核心。</td>
+                </tr>
+                <tr>
+                  <td>业务系统 no-code</td>
+                  <td>NocoBase、Baserow、NocoDB、Saltcorn</td>
+                  <td>数据模型、表单、权限、工作流、轻量业务应用</td>
+                  <td>用于快速实例化模板和沙箱预览。</td>
+                </tr>
+                <tr>
+                  <td>内部工具低代码</td>
+                  <td>Appsmith、ToolJet、Budibase</td>
+                  <td>内部运营工具、管理台、数据操作台</td>
+                  <td>作为专项 Skill 的目标底座。</td>
+                </tr>
+                <tr>
+                  <td>报表与驾驶舱</td>
+                  <td>JimuReport/JimuBI、DataEase、Superset、Metabase</td>
+                  <td>报表、BI、自助分析、经营驾驶舱</td>
+                  <td>纳入 dashboard/report Skill 的目标底座。</td>
+                </tr>
+                <tr>
+                  <td>前端页面 DSL</td>
+                  <td>amis、Alibaba LowCode Engine、Vben Admin</td>
+                  <td>表单、列表、详情页、后台页面模板</td>
+                  <td>用于页面级生成和二次编辑，不替代 AI RD DSL。</td>
+                </tr>
+                <tr>
+                  <td>自动化与集成</td>
+                  <td>n8n、Windmill、Harness</td>
+                  <td>业务自动化、后台任务、CI/CD、部署发布</td>
+                  <td>Harness 作为企业交付主线；其他作为可选集成执行器。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="dsl-positioning">
+          <h2>2.1 DSL 定位</h2>
+          <p>
+            AI研发平台已经存在 <code>page_dsl</code>、<code>system_dsl</code>、<code>recording_flow_dsl</code>、<code>test_intent_dsl</code> 和 <code>AIRdDSLVersion</code>。下一步不是另起炉灶，而是把它们升级为统一的 <strong>TestHub AI RD DSL</strong>。
+          </p>
+          <div class="callout">
+            <strong>边界：</strong>本 DSL 只服务【AI研发平台】三条业务场景，不复用、不改造、不依赖“企业原型编辑器 DSL”。两者可以未来做导入适配，但概念和模型必须分开。
+          </div>
+          <h3>DSL 的核心职责</h3>
+          <ul>
+            <li>作为 AI 智能体之间的结构化协作协议。</li>
+            <li>作为前端编辑器、后端服务、测试生成、代码生成、Harness 交付之间的契约。</li>
+            <li>作为企业审计、版本回滚、需求追溯、交付门禁的证据载体。</li>
+          </ul>
+        </section>
+
+        <section class="section" id="dsl-layering">
+          <h2>2.2 DSL 分层模型</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>DSL 层</th>
+                  <th>目标</th>
+                  <th>核心字段</th>
+                  <th>主要消费者</th>
+                  <th>优先级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>workspace_manifest</code></td>
+                  <td>统一描述工作区、场景、版本、项目、权限、治理状态。</td>
+                  <td>workspace_id、scene_type、current_version、project_id、governance_status</td>
+                  <td>三智能体、工作台、交付门禁</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td><code>project_dsl</code></td>
+                  <td>沉淀项目基线、目标端、技术约束、非功能要求。</td>
+                  <td>vision、users、scope、platforms、architecture_constraints、nfr</td>
+                  <td>架构智能体、开发智能体、部署智能体</td>
+                  <td><span class="badge p1">P1</span></td>
+                </tr>
+                <tr>
+                  <td><code>requirement_dsl</code></td>
+                  <td>沉淀需求基线、验收标准、业务规则、优先级。</td>
+                  <td>requirements、acceptance_criteria、business_rules、risks</td>
+                  <td>测试意图、代码生成、交付报告</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td><code>prototype_dsl/page_dsl</code></td>
+                  <td>表达页面、组件、布局、数据绑定、交互。</td>
+                  <td>pages、components、props、events、actions、responsive</td>
+                  <td>前端编辑器、原型预览、代码生成</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td><code>flow_dsl/system_dsl</code></td>
+                  <td>表达页面跳转、业务流程、状态流转、异常路径。</td>
+                  <td>nodes、edges、guards、side_effects、error_handlers</td>
+                  <td>流程图、测试生成、业务分析</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td><code>industry_template_dsl</code></td>
+                  <td>表达行业模板、领域能力、标准角色、菜单、实体、流程、报表、驾驶舱。</td>
+                  <td>industry、domain_modules、roles、entities、pages、workflows、reports、dashboards、seed_data</td>
+                  <td>场景三智能体、模板市场、Skill Runtime</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td><code>skill_contract_dsl</code></td>
+                  <td>表达 Skill 的输入输出、能力范围、目标底座、风险级别、验收规则。</td>
+                  <td>skill_id、input_schema、output_schema、target_runtime、permissions、quality_gates</td>
+                  <td>Skill Registry、智能体编排、生成执行服务</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td><code>test_intent_dsl</code></td>
+                  <td>表达测试场景、步骤、数据、断言和覆盖关系。</td>
+                  <td>preconditions、steps、assertions、data_set、coverage_refs</td>
+                  <td>Playwright 生成、自动化测试、回归套件</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td><code>implementation_dsl</code></td>
+                  <td>表达模块、接口、数据模型、任务拆解、代码约束。</td>
+                  <td>modules、apis、models、tasks、code_constraints</td>
+                  <td>AI 开发任务、代码生成、代码审查</td>
+                  <td><span class="badge p1">P1</span></td>
+                </tr>
+                <tr>
+                  <td><code>delivery_dsl</code></td>
+                  <td>表达环境、构建、部署、Harness pipeline、回滚策略。</td>
+                  <td>environments、build、deploy、harness、rollback、smoke</td>
+                  <td>Harness handoff、部署门禁、交付报告</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td><code>generation_manifest</code></td>
+                  <td>记录每次生成的模板来源、Skill 编排、外部底座、产物清单、日志和可重放参数。</td>
+                  <td>run_id、template_version、skills、adapters、artifacts、logs、replay_params</td>
+                  <td>生成审计、失败恢复、模板迭代、交付包</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td><code>governance_dsl</code></td>
+                  <td>表达版本、审计、产物、快照、交付证据。</td>
+                  <td>versions、audit_events、artifacts、snapshots、traceability</td>
+                  <td>企业审计、交付包、回滚</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="dsl-governance">
+          <h2>2.3 版本、校验与追溯</h2>
+          <h3>版本治理</h3>
+          <ul>
+            <li>保留现有 <code>AIRdDSLVersion</code>，扩展版本类型：导入基线、人工编辑、AI 生成、测试生成、开发计划、交付基线。</li>
+            <li>每次关键变更自动生成 DSL snapshot，并支持 diff、rollback、锁定基线。</li>
+            <li>交付前必须存在一个可追溯的 DSL 版本基线。</li>
+          </ul>
+          <h3>Schema 校验</h3>
+          <ul>
+            <li>P0 先给 <code>workspace_manifest</code>、<code>page_dsl</code>、<code>flow_dsl</code>、<code>test_intent_dsl</code>、<code>delivery_dsl</code> 建 JSON Schema。</li>
+            <li>保存、同步、导入确认、交付门禁前都必须执行校验。</li>
+            <li>校验错误需要返回字段路径、错误原因、修复建议，前端以右侧详情面板展示。</li>
+          </ul>
+          <h3>追溯链</h3>
+          <p><code>project_id -> requirement_id -> page_id -> component_id -> flow_edge_id -> test_intent_id -> test_case_id -> code_task_id -> artifact_id -> deployment_id</code></p>
+          <p>企业客户最终需要的不是“AI 生成了什么”，而是“每个交付物为什么生成、覆盖了什么需求、经过了哪些测试、由哪个版本发布”。</p>
+        </section>
+
+        <section class="section" id="dsl-contract">
+          <h2>2.4 统一契约示例</h2>
+          <pre>{
+  "schema_version": "testhub-ai-rd-workspace-manifest.v1",
+  "dsl_type": "workspace_manifest",
+  "workspace_id": "aird_xxx",
+  "scene_type": "enterprise_prototype_import",
+  "current_version": 12,
+  "project": {
+    "project_id": 101,
+    "name": "物业通企业版"
+  },
+  "dsl_refs": {
+    "project_dsl": "project.v3",
+    "requirement_dsl": "requirement.v5",
+    "prototype_dsl": "prototype.v12",
+    "flow_dsl": "flow.v12",
+    "industry_template_dsl": "industry-template.crm.v2",
+    "skill_contract_dsl": "skill-contract.v1",
+    "test_intent_dsl": "test-intent.v8",
+    "implementation_dsl": "implementation.v4",
+    "delivery_dsl": "delivery.v2",
+    "generation_manifest": "generation.run.20260601.001",
+    "governance_dsl": "governance.v12"
+  },
+  "traceability": {
+    "requirements": 46,
+    "pages": 28,
+    "components": 318,
+    "test_intents": 72,
+    "deployment_handoffs": 3
+  }
+}</pre>
+        </section>
+
+        <section class="section" id="agent-overview">
+          <h2>3.1 三个智能体总览</h2>
+          <p class="lead">三个智能体需要独立注册、独立入口、独立编排，但共用 AI RD DSL、会话工作区、测试生成、AI 开发任务、部署与 Harness 能力。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>智能体</th>
+                  <th>驱动场景</th>
+                  <th>职责</th>
+                  <th>关键输入</th>
+                  <th>关键输出</th>
+                  <th>优先级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>agent_enterprise_prototype_import</code></td>
+                  <td>场景一</td>
+                  <td>导入解析、DSL 转换、确认任务、需求映射、交付门禁编排。</td>
+                  <td>Axure/Figma/HTML、项目、需求基线、环境</td>
+                  <td>AI RD 工作区、DSL 基线、测试意图、实现计划</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td><code>agent_supervised_ai_delivery</code></td>
+                  <td>场景二</td>
+                  <td>项目澄清、需求澄清、阶段确认、自动生成和执行编排。</td>
+                  <td>一句话需求、用户问答、项目约束</td>
+                  <td>项目/需求 DSL、原型、代码任务、测试、部署</td>
+                  <td><span class="badge p1">P1</span></td>
+                </tr>
+                <tr>
+                  <td><code>agent_autonomous_industry_factory</code></td>
+                  <td>场景三</td>
+                  <td>行业模板选择、自动澄清、模板实例化、沙箱生成和质量评估。</td>
+                  <td>行业、目标用户、软件类型、少量偏好</td>
+                  <td>行业产品 DSL、可运行成品、评测报告</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="agent-enterprise">
+          <h2>3.2 企业原型导入智能体</h2>
+          <h3>能力边界</h3>
+          <ul>
+            <li>只处理 AI研发平台企业原型导入工作区，不操作思源研发管理模块。</li>
+            <li>不直接把 Axure 变代码，必须先转 DSL、人工确认、生成基线。</li>
+            <li>高风险动作包括覆盖 DSL 基线、触发开发、触发部署，必须有确认。</li>
+          </ul>
+          <h3>编排步骤</h3>
+          <ol>
+            <li>创建或选择企业导入工作区。</li>
+            <li>上传并解析原型资产，形成导入候选。</li>
+            <li>输出页面树、组件识别、交互边、资源清单和疑点清单。</li>
+            <li>用户确认页面、流程、需求映射和排除范围。</li>
+            <li>写入 DSL 基线，生成版本。</li>
+            <li>生成测试意图、实现计划、开发任务和 Harness 交付计划。</li>
+          </ol>
+        </section>
+
+        <section class="section" id="agent-supervised">
+          <h2>3.3 人工澄清自动研发智能体</h2>
+          <p>这个智能体可以复用当前 AI 会话能力，但要从“对话回答”升级为“阶段化工作流”。每个阶段输出结构化卡片和 DSL 片段，用户确认后才能进入下一阶段。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>阶段</th>
+                  <th>智能体行为</th>
+                  <th>用户动作</th>
+                  <th>写入 DSL</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>项目澄清</td>
+                  <td>提出项目目标、用户、范围、终端、技术约束问题。</td>
+                  <td>选择、补充、确认。</td>
+                  <td><code>project_dsl</code></td>
+                </tr>
+                <tr>
+                  <td>需求澄清</td>
+                  <td>拆分需求、验收标准、异常路径、优先级。</td>
+                  <td>确认需求基线。</td>
+                  <td><code>requirement_dsl</code></td>
+                </tr>
+                <tr>
+                  <td>自动原型</td>
+                  <td>生成页面、流程和交互。</td>
+                  <td>预览、修改、确认。</td>
+                  <td><code>prototype_dsl</code>、<code>flow_dsl</code></td>
+                </tr>
+                <tr>
+                  <td>自动开发测试部署</td>
+                  <td>拆任务、生成代码、测试、部署。</td>
+                  <td>确认高风险动作。</td>
+                  <td><code>implementation_dsl</code>、<code>delivery_dsl</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="agent-autonomous">
+          <h2>3.4 行业产品全自动智能体</h2>
+          <p>该智能体不能完全依赖自由生成，需要行业模板库约束。它的核心不是“聊天更强”，而是“模板、DSL、评测、沙箱、发布门禁”更强。</p>
+          <h3>关键能力</h3>
+          <ul>
+            <li>行业模板选择和自动补全。</li>
+            <li>模板 DSL 实例化。</li>
+            <li>自动代码生成和沙箱预览。</li>
+            <li>自动测试评分和安全检查。</li>
+            <li>用户一键接管到企业工作区，进入场景一的治理体系。</li>
+          </ul>
+          <h3>与 Skill Runtime 的关系</h3>
+          <p>行业产品全自动智能体不直接绑定 JEECG、NocoBase、DataEase 等具体平台，也不直接在主平台进程里生成复杂工程。它负责编排：选择模板、补齐业务参数、拆分生成任务、调用 Skill Runtime、接收产物、执行质量门禁、把合格产物写入 AI RD 工作区。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>阶段</th>
+                  <th>智能体职责</th>
+                  <th>Skill Runtime 职责</th>
+                  <th>平台治理职责</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>模板匹配</td>
+                  <td>根据一句话、行业、规模、终端和偏好匹配模板。</td>
+                  <td>返回可用模板能力、依赖和目标底座限制。</td>
+                  <td>记录模板版本和用户选择。</td>
+                </tr>
+                <tr>
+                  <td>模板实例化</td>
+                  <td>补齐角色、菜单、实体、流程、报表和默认数据。</td>
+                  <td>校验 <code>industry_template_dsl</code> 和 <code>skill_contract_dsl</code>。</td>
+                  <td>生成 DSL 版本和审计事件。</td>
+                </tr>
+                <tr>
+                  <td>生成执行</td>
+                  <td>编排 CRUD、表单、流程、报表、驾驶舱、移动端和交付 Skill。</td>
+                  <td>执行适配器、构建工程、生成预览、返回产物清单。</td>
+                  <td>隔离工作区、保存产物、生成 <code>generation_manifest</code>。</td>
+                </tr>
+                <tr>
+                  <td>质量门禁</td>
+                  <td>解释问题、建议重试、提示人工接管。</td>
+                  <td>执行测试、静态检查、安全扫描和预览可用性检查。</td>
+                  <td>决定是否允许发布、交付或进入企业工作区。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="p0">
+          <h2>4.1 P0：企业主线与 DSL 底座</h2>
+          <p class="lead">P0 的目标是把 To B 主场景做扎实，形成可销售、可试点、可持续演示的闭环。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>任务</th>
+                  <th>目标对齐</th>
+                  <th>前端要求</th>
+                  <th>后端要求</th>
+                  <th>依赖</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>三场景首页入口拆分</td>
+                  <td>明确三条业务路径，避免混在 AI 会话或工作台中。</td>
+                  <td>首页提供三个入口卡片；进入后使用各自向导/工作区，不做单页功能堆叠。</td>
+                  <td>新增 scene_type 参数与权限识别，路由跳转保留现有能力。</td>
+                  <td>前端导航、权限菜单</td>
+                </tr>
+                <tr>
+                  <td>AI RD DSL Schema Registry</td>
+                  <td>让 DSL 有正式版本、校验和错误解释。</td>
+                  <td>展示校验结果、字段路径、修复建议；编辑保存前提示。</td>
+                  <td>提供 schema 注册、validate、diff、snapshot API。</td>
+                  <td>现有 AIRdDSLVersion</td>
+                </tr>
+                <tr>
+                  <td>Axure 导入企业确认台</td>
+                  <td>企业用户必须确认页面、组件和流程后才能生成基线。</td>
+                  <td>左侧页面树，中间原型预览/识别结果，右侧详情与确认状态。</td>
+                  <td>导入 job、候选页面、候选组件、确认写入 DSL、审计记录。</td>
+                  <td>现有 import-jobs</td>
+                </tr>
+                <tr>
+                  <td>需求追溯矩阵</td>
+                  <td>证明页面、测试、代码、部署覆盖了哪些需求。</td>
+                  <td>矩阵页、缺口筛选、右侧详情、批量绑定。</td>
+                  <td>建立 requirement/page/component/flow/test/code/deploy 引用关系。</td>
+                  <td>需求基线、DSL</td>
+                </tr>
+                <tr>
+                  <td>企业原型导入智能体</td>
+                  <td>用 Agent 驱动导入、确认、补全、交付，而不是靠人工找按钮。</td>
+                  <td>工作区内展示智能体任务流、待确认项、执行日志。</td>
+                  <td>注册 agent、能力执行、风险确认、结果写入 DSL。</td>
+                  <td>assistant capability</td>
+                </tr>
+                <tr>
+                  <td>Harness 交付接入强化</td>
+                  <td>用现有 Harness 能力承担企业集成和部署交付。</td>
+                  <td>交付页展示连接、计划、触发、执行回写、证据。</td>
+                  <td>完善 delivery_dsl、harness handoff、状态刷新、结果回写。</td>
+                  <td>现有 AIRdHarnessConnection/Handoff</td>
+                </tr>
+                <tr>
+                  <td>交付门禁</td>
+                  <td>禁止 DSL、测试、代码、环境不完整时直接交付。</td>
+                  <td>门禁检查列表、阻断项、修复入口。</td>
+                  <td>统一 gate service，返回 blocking/warning/pass。</td>
+                  <td>DSL、测试、开发、Harness</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="p1">
+          <h2>4.2 P1：自动研发与移动端</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>任务</th>
+                  <th>目标对齐</th>
+                  <th>前端要求</th>
+                  <th>后端要求</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>移动端一句话入口</td>
+                  <td>服务有明确意向的个人用户和轻团队。</td>
+                  <td>移动端只呈现输入、问答卡片、阶段进度、预览入口，不做复杂编辑器。</td>
+                  <td>同一会话可绑定 project_dsl 和 requirement_dsl。</td>
+                </tr>
+                <tr>
+                  <td>人工澄清自动研发智能体</td>
+                  <td>把“会话能力”产品化成阶段工作流。</td>
+                  <td>阶段卡片、确认按钮、补充输入、历史基线。</td>
+                  <td>能力注册、FlowRun、阶段门禁、DSL 写入。</td>
+                </tr>
+                <tr>
+                  <td>自动实现计划 DSL</td>
+                  <td>从需求/原型生成可执行开发任务。</td>
+                  <td>实现计划树、任务状态、代码预览入口。</td>
+                  <td>implementation_dsl、AI 开发任务映射。</td>
+                </tr>
+                <tr>
+                  <td>移动端审批与状态查看</td>
+                  <td>让用户在手机上确认需求、原型、部署等关键动作。</td>
+                  <td>审批卡片、版本差异摘要、风险提示。</td>
+                  <td>审批记录、风险确认、审计写入。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="p2">
+          <h2>4.3 P2：行业产品工厂</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>任务</th>
+                  <th>目标对齐</th>
+                  <th>前端要求</th>
+                  <th>后端要求</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>行业模板 DSL 库</td>
+                  <td>让全自动生成可控，不从空白自由发挥。</td>
+                  <td>行业选择、模板预览、能力范围说明。</td>
+                  <td>模板版本、模板 DSL、实例化服务。</td>
+                </tr>
+                <tr>
+                  <td>Skill Registry 与 Skill 契约</td>
+                  <td>让 CRUD、表单、流程、报表、驾驶舱、移动端、部署等能力可注册、可编排、可审计。</td>
+                  <td>Skill 市场、能力详情、输入输出说明、版本状态、启停控制。</td>
+                  <td>skill_contract_dsl、版本兼容、权限范围、质量门禁。</td>
+                </tr>
+                <tr>
+                  <td>独立 Skill Runtime</td>
+                  <td>把重型生成、外部平台适配、构建预览从主平台后端剥离，避免主平台膨胀。</td>
+                  <td>显示执行队列、日志、产物、失败原因、重试与接管入口。</td>
+                  <td>异步任务、沙箱执行、适配器调度、日志流、产物回传。</td>
+                </tr>
+                <tr>
+                  <td>全自动行业产品智能体</td>
+                  <td>满足只要通用成品的用户。</td>
+                  <td>移动端极简输入、生成进度、沙箱预览。</td>
+                  <td>模板匹配、自动补全、沙箱生成、质量评分。</td>
+                </tr>
+                <tr>
+                  <td>自动评测与推荐发布</td>
+                  <td>降低全自动产品质量风险。</td>
+                  <td>评分报告、问题列表、重试/接管入口。</td>
+                  <td>评测脚本、覆盖率、缺陷识别、发布建议。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="skill-factory-positioning">
+          <h2>5.1 行业模板与 Skill 工厂能力定位</h2>
+          <p class="lead">
+            这块能力要作为【AI研发平台】场景三的核心竞争力建设，但底层实现必须服务化、插件化、适配器化。用户看到的是平台内置的“行业产品快速生成”入口，工程上执行的是独立 Skill Runtime 和外部生成底座适配。
+          </p>
+          <div class="grid three">
+            <div class="card">
+              <h3><span class="badge p0">平台内置</span>产品入口与治理</h3>
+              <p>首页入口、场景三工作区、行业模板市场、智能体任务流、质量报告、产物接管、权限、审计、版本、交付包全部留在平台内。</p>
+            </div>
+            <div class="card">
+              <h3><span class="badge p1">独立服务</span>生成执行与沙箱</h3>
+              <p>模板实例化、Skill 编排、外部底座调用、工程构建、预览、自动测试、失败重试由独立服务承担，支持横向扩展。</p>
+            </div>
+            <div class="card">
+              <h3><span class="badge p2">Skill 插件</span>能力生态</h3>
+              <p>CRUD、表单、流程、报表、驾驶舱、移动端、集成、部署等能力以 Skill 形式注册，既能平台自研，也能接入外部开源能力。</p>
+            </div>
+          </div>
+          <div class="callout">
+            <strong>原则：</strong>平台不能变成 JEECG、NocoBase、DataEase 或某个低代码平台的二次封装。外部能力只能作为目标底座或适配器，平台核心资产必须是 AI RD DSL、行业模板 DSL、Skill 契约、治理链路和交付闭环。
+          </div>
+        </section>
+
+        <section class="section" id="skill-factory-architecture">
+          <h2>5.2 平台、服务与 Skill 的架构边界</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>层级</th>
+                  <th>职责</th>
+                  <th>不做什么</th>
+                  <th>关键对象</th>
+                  <th>优先级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>AI研发平台产品层</td>
+                  <td>提供场景三入口、模板市场、生成工作区、质量报告、接管到企业工作区、交付发布。</td>
+                  <td>不在一个页面平铺所有生成能力，不直接暴露外部平台复杂配置。</td>
+                  <td>Scene、Workspace、Template、Artifact、QualityReport</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td>场景三智能体层</td>
+                  <td>理解用户意图、选择模板、补齐参数、编排 Skill、解释失败、建议接管。</td>
+                  <td>不直接写业务源码，不绕过 DSL 和门禁触发部署。</td>
+                  <td><code>agent_autonomous_industry_factory</code></td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td>AI RD DSL 层</td>
+                  <td>统一描述行业、领域、实体、页面、流程、测试、生成产物和部署交付。</td>
+                  <td>不复用企业原型编辑器 DSL，不让外部底座定义平台核心语义。</td>
+                  <td><code>industry_template_dsl</code>、<code>skill_contract_dsl</code>、<code>generation_manifest</code></td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td>Skill Runtime 服务层</td>
+                  <td>负责异步执行、沙箱、适配器调度、构建预览、日志、失败重试和产物回传。</td>
+                  <td>不拥有平台项目、权限、审计最终事实；只接收任务并返回结果。</td>
+                  <td>Run、Step、Log、Artifact、Preview、Evaluation</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td>Skill Adapter 层</td>
+                  <td>把平台 DSL 编译到 JEECG、RuoYi、NocoBase、DataEase、amis 等目标底座。</td>
+                  <td>不要求所有模板必须使用同一个目标底座。</td>
+                  <td>Adapter、Compiler、Importer、Exporter</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td>外部底座层</td>
+                  <td>提供特定类型产物的成熟能力，例如代码生成、BI、低代码页面、流程自动化。</td>
+                  <td>不直接面对最终用户成为主平台入口。</td>
+                  <td>JEECG、RuoYi、NocoBase、JimuBI、DataEase、Superset、Appsmith、ToolJet</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td>Harness 交付层</td>
+                  <td>承接企业集成、CI/CD、部署发布、执行回写和交付证据。</td>
+                  <td>不承担模板生成和业务代码推理。</td>
+                  <td>Harness Connection、Handoff、Pipeline、Execution</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <pre>场景三入口
+  -> 行业产品全自动智能体
+    -> 行业模板 DSL
+      -> Skill 编排计划
+        -> Skill Runtime
+          -> Adapter: JEECG/RuoYi/NocoBase/DataEase/amis/...
+          -> 沙箱构建与预览
+          -> 自动测试与质量门禁
+        -> 平台工作区产物、审计、接管、交付</pre>
+        </section>
+
+        <section class="section" id="skill-runtime">
+          <h2>5.3 独立 Skill Runtime 规划</h2>
+          <p>Skill Runtime 是“执行层”，不是新的产品入口。它可以独立部署、独立扩容、独立升级，主平台通过标准 API 调用它。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>服务能力</th>
+                  <th>目标</th>
+                  <th>接口形态</th>
+                  <th>治理要求</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>模板匹配与实例化</td>
+                  <td>根据行业、软件类型、规模、终端和用户偏好生成模板实例。</td>
+                  <td><code>POST /templates/match</code>、<code>POST /templates/instantiate</code></td>
+                  <td>返回模板版本、缺省项、风险项和可用 Skill 列表。</td>
+                </tr>
+                <tr>
+                  <td>Skill 编排执行</td>
+                  <td>按计划执行多个 Skill，支持串行、并行、条件分支和失败重试。</td>
+                  <td><code>POST /runs</code>、<code>GET /runs/{id}</code>、<code>POST /runs/{id}/cancel</code></td>
+                  <td>每步记录输入摘要、输出摘要、日志、耗时和错误码。</td>
+                </tr>
+                <tr>
+                  <td>沙箱构建预览</td>
+                  <td>隔离构建生成工程，提供临时预览地址和截图检查。</td>
+                  <td><code>POST /sandboxes</code>、<code>GET /previews/{id}</code></td>
+                  <td>容器隔离、资源限制、超时回收、访问令牌。</td>
+                </tr>
+                <tr>
+                  <td>产物管理</td>
+                  <td>回传源码、配置、页面 DSL、报表定义、测试脚本、部署描述。</td>
+                  <td><code>GET /runs/{id}/artifacts</code></td>
+                  <td>产物必须有类型、来源 Skill、hash、大小、预览方式和安全扫描状态。</td>
+                </tr>
+                <tr>
+                  <td>质量评测</td>
+                  <td>对可运行成品执行冒烟测试、页面可用性、权限、数据模型和安全检查。</td>
+                  <td><code>POST /evaluations</code>、<code>GET /evaluations/{id}</code></td>
+                  <td>输出 blocking/warning/pass，阻断项不允许自动发布。</td>
+                </tr>
+                <tr>
+                  <td>执行回放</td>
+                  <td>根据 <code>generation_manifest</code> 重放一次生成，用于问题排查和模板迭代。</td>
+                  <td><code>POST /runs/{id}/replay</code></td>
+                  <td>重放必须绑定原模板版本、Skill 版本和适配器版本。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>部署约束</h3>
+          <ul>
+            <li>运行时服务建议独立为 <code>testhub-skill-runtime</code>，生成 Worker 独立为 <code>testhub-generator-worker</code>，沙箱预览独立为 <code>testhub-preview-sandbox</code>。</li>
+            <li>主平台只保存任务状态和最终产物索引，日志大文件和临时构建目录由运行时管理并按策略归档。</li>
+            <li>每个外部底座适配器必须可启停、可限流、可降级，不能因为一个适配器故障影响平台基础能力。</li>
+            <li>涉及账号、密码、Token、仓库密钥、部署密钥的内容只能走平台密钥管理，不写入模板 DSL 明文。</li>
+          </ul>
+        </section>
+
+        <section class="section" id="skill-contracts">
+          <h2>5.4 Skill 契约、分类与治理</h2>
+          <p>Skill 是能力定义和执行契约，不等同于一个页面，也不等同于一个后端接口。每个 Skill 必须声明自己消费什么 DSL、产出什么产物、需要什么权限、触发什么门禁。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Skill</th>
+                  <th>能力目标</th>
+                  <th>输入</th>
+                  <th>输出</th>
+                  <th>推荐优先级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>industry-template-skill</code></td>
+                  <td>把行业、软件类型和用户偏好转成行业模板实例。</td>
+                  <td>行业、规模、终端、模板库、偏好</td>
+                  <td><code>industry_template_dsl</code></td>
+                  <td><span class="badge p2">第一批</span></td>
+                </tr>
+                <tr>
+                  <td><code>data-model-skill</code></td>
+                  <td>生成实体、字段、关系、字典、种子数据。</td>
+                  <td><code>industry_template_dsl</code></td>
+                  <td>数据模型 DSL、迁移脚本、种子数据</td>
+                  <td><span class="badge p2">第一批</span></td>
+                </tr>
+                <tr>
+                  <td><code>crud-skill</code></td>
+                  <td>生成单表、树表、主子表、列表、详情、增删改查。</td>
+                  <td>实体模型、权限、页面规范</td>
+                  <td>页面、接口、菜单、源码或低代码配置</td>
+                  <td><span class="badge p2">第一批</span></td>
+                </tr>
+                <tr>
+                  <td><code>form-skill</code></td>
+                  <td>生成复杂表单、校验规则、动态显隐、分步填写。</td>
+                  <td>字段、业务规则、流程状态</td>
+                  <td>表单配置、校验 DSL、前端组件</td>
+                  <td><span class="badge p2">第一批</span></td>
+                </tr>
+                <tr>
+                  <td><code>workflow-skill</code></td>
+                  <td>生成审批流、状态机、流转规则、通知。</td>
+                  <td>流程 DSL、角色、权限、业务规则</td>
+                  <td>流程定义、状态转换、测试用例</td>
+                  <td><span class="badge p2">第二批</span></td>
+                </tr>
+                <tr>
+                  <td><code>report-skill</code></td>
+                  <td>生成报表、查询条件、导出、打印。</td>
+                  <td>数据模型、指标定义、权限</td>
+                  <td>报表定义、SQL/视图、报表页面</td>
+                  <td><span class="badge p2">第二批</span></td>
+                </tr>
+                <tr>
+                  <td><code>dashboard-skill</code></td>
+                  <td>生成驾驶舱、大屏、KPI 卡片、趋势图、分布图。</td>
+                  <td>指标体系、数据源、角色视角</td>
+                  <td>BI 配置、图表页面、数据查询</td>
+                  <td><span class="badge p2">第二批</span></td>
+                </tr>
+                <tr>
+                  <td><code>mobile-shell-skill</code></td>
+                  <td>生成移动端壳、移动页面、扫码、审批、消息入口。</td>
+                  <td>目标终端、页面 DSL、流程 DSL</td>
+                  <td>移动端页面、路由、交互配置</td>
+                  <td><span class="badge p2">第三批</span></td>
+                </tr>
+                <tr>
+                  <td><code>handoff-skill</code></td>
+                  <td>生成测试、交付包、部署说明、Harness handoff。</td>
+                  <td>生成产物、测试结果、环境配置</td>
+                  <td><code>delivery_dsl</code>、交付包、Harness 输入</td>
+                  <td><span class="badge p0">复用 P0</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>Skill Contract 必填字段</h3>
+          <pre>{
+  "skill_id": "crud-skill",
+  "version": "1.0.0",
+  "input_schema": "testhub.skill.crud.input.v1",
+  "output_schema": "testhub.skill.crud.output.v1",
+  "consumes_dsl": ["industry_template_dsl", "page_dsl", "implementation_dsl"],
+  "produces": ["source_code", "page_config", "api_contract", "test_intent_dsl"],
+  "target_runtimes": ["native-generator", "jeecg-adapter", "ruoyi-adapter"],
+  "permissions": ["artifact.write", "preview.create"],
+  "risk_level": "medium",
+  "quality_gates": ["schema_valid", "preview_available", "smoke_passed"]
+}</pre>
+        </section>
+
+        <section class="section" id="platform-adapters">
+          <h2>5.5 外部底座适配规划</h2>
+          <p>外部平台的接入要采用 Adapter 模式。Adapter 只负责把平台 DSL 编译成目标底座可理解的配置、源码或项目结构，再把产物回传给平台，不能让外部平台反向主导平台信息架构。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>适配器</th>
+                  <th>目标</th>
+                  <th>输入 DSL</th>
+                  <th>输出产物</th>
+                  <th>接入优先级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>jeecg-skills-adapter</code></td>
+                  <td>学习 JEECG Skills 的能力颗粒度，生成 CRUD、表单、报表、流程、大屏等企业后台能力。</td>
+                  <td>实体、页面、流程、报表、权限</td>
+                  <td>Java/Vue 工程、菜单、表单、报表配置</td>
+                  <td><span class="badge p2">第一优先</span></td>
+                </tr>
+                <tr>
+                  <td><code>ruoyi-generator-adapter</code></td>
+                  <td>快速生成可拥有源码的管理后台和标准企业应用骨架。</td>
+                  <td>实体、字段、权限、菜单、接口</td>
+                  <td>后端代码、前端页面、SQL、菜单配置</td>
+                  <td><span class="badge p2">第一优先</span></td>
+                </tr>
+                <tr>
+                  <td><code>nocobase-adapter</code></td>
+                  <td>快速实例化数据模型、权限、表单、工作流，适合业务系统原型和轻交付。</td>
+                  <td>实体、关系、角色、工作流</td>
+                  <td>NocoBase 配置、插件配置、预览实例</td>
+                  <td><span class="badge p2">第二优先</span></td>
+                </tr>
+                <tr>
+                  <td><code>jimu-dataease-bi-adapter</code></td>
+                  <td>生成报表、BI 和经营驾驶舱。</td>
+                  <td>指标、数据源、报表、图表、角色视角</td>
+                  <td>报表定义、仪表盘配置、嵌入链接</td>
+                  <td><span class="badge p2">第二优先</span></td>
+                </tr>
+                <tr>
+                  <td><code>amis-page-adapter</code></td>
+                  <td>把页面 DSL 编译成 JSON 页面配置，适合表单、列表、详情页。</td>
+                  <td><code>page_dsl</code>、表单规则、接口契约</td>
+                  <td>amis JSON、页面预览、组件配置</td>
+                  <td><span class="badge p2">第二优先</span></td>
+                </tr>
+                <tr>
+                  <td><code>appsmith-tooljet-adapter</code></td>
+                  <td>快速生成内部工具、数据操作台和轻量管理界面。</td>
+                  <td>数据源、页面、动作、权限</td>
+                  <td>应用配置、连接器配置、预览实例</td>
+                  <td><span class="badge p2">第三优先</span></td>
+                </tr>
+                <tr>
+                  <td><code>windmill-n8n-adapter</code></td>
+                  <td>生成后台自动化任务、集成流和定时作业。</td>
+                  <td>流程、触发器、外部系统、数据映射</td>
+                  <td>自动化脚本、工作流配置、执行记录</td>
+                  <td><span class="badge p2">第三优先</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>适配器准入规则</h3>
+          <ul>
+            <li>必须声明许可证、部署方式、运行依赖、数据出境风险和商业使用限制。</li>
+            <li>必须支持 dry-run，先输出计划、差异和预计产物，再允许真正生成。</li>
+            <li>必须返回结构化错误，不允许只返回大段日志。</li>
+            <li>必须支持产物反向导入到平台工作区，不能只停留在外部平台预览。</li>
+            <li>必须经过沙箱测试、冒烟测试和安全扫描后才能进入“可发布”状态。</li>
+          </ul>
+        </section>
+
+        <section class="section" id="industry-template-plan">
+          <h2>5.6 行业模板库实施路线</h2>
+          <p>行业模板库要先追求高频、标准化、可评测，不要一开始铺满所有行业。每个模板必须能实例化为可运行成品，并能被接管到企业工作区继续治理。</p>
+          <h3>第一批模板</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>模板</th>
+                  <th>核心模块</th>
+                  <th>关键 Skill</th>
+                  <th>验收产物</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>CRM 客户管理</td>
+                  <td>客户、联系人、商机、跟进、合同、回款、销售看板</td>
+                  <td>CRUD、表单、流程、报表、驾驶舱</td>
+                  <td>PC 管理后台、销售驾驶舱、测试用例、交付包</td>
+                </tr>
+                <tr>
+                  <td>进销存</td>
+                  <td>商品、供应商、采购、销售、库存、盘点、库存预警</td>
+                  <td>CRUD、主子表、报表、权限、数据校验</td>
+                  <td>可录入单据、库存联动、库存报表、冒烟测试</td>
+                </tr>
+                <tr>
+                  <td>工单售后</td>
+                  <td>客户报修、工单派发、处理记录、回访、满意度、SLA</td>
+                  <td>流程、移动端、通知、报表、驾驶舱</td>
+                  <td>工单闭环、移动处理页、SLA 看板、测试集</td>
+                </tr>
+                <tr>
+                  <td>OA 审批</td>
+                  <td>请假、报销、用印、采购申请、审批流、消息提醒</td>
+                  <td>流程、表单、移动审批、权限</td>
+                  <td>审批表单、状态机、移动审批入口、流程测试</td>
+                </tr>
+                <tr>
+                  <td>设备巡检</td>
+                  <td>设备台账、巡检计划、扫码巡检、异常上报、维修闭环</td>
+                  <td>移动端、CRUD、流程、报表、二维码</td>
+                  <td>移动巡检页、异常闭环、设备健康看板</td>
+                </tr>
+                <tr>
+                  <td>经营驾驶舱</td>
+                  <td>KPI、营收、成本、客户、库存、项目、人员效率</td>
+                  <td>指标、报表、驾驶舱、数据接入</td>
+                  <td>多角色驾驶舱、图表配置、数据口径说明</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>模板治理流程</h3>
+          <ol>
+            <li>定义行业模板 DSL：角色、菜单、实体、字段、流程、报表、驾驶舱、测试数据、部署建议。</li>
+            <li>为模板绑定 Skill 组合：明确每个模块由哪些 Skill 生成，哪些必须人工确认。</li>
+            <li>生成黄金样例：每个模板至少保留一个标准可运行样例，用于回归评测。</li>
+            <li>建立质量基线：页面可用、核心流程可走通、数据联动正确、测试可回放、交付包完整。</li>
+            <li>开放模板市场：展示模板适用范围、生成耗时、支持终端、目标底座、最近质量评分。</li>
+            <li>支持企业接管：用户满意后可一键转入企业工作区，进入需求追溯、开发、测试、Harness 交付主线。</li>
+          </ol>
+        </section>
+
+        <section class="section" id="frontend">
+          <h2>6.1 前端设计与交互约束</h2>
+          <div class="callout">
+            <strong>关键约束：</strong>不能把三条业务场景做成一个大页面平铺所有功能。每条场景需要独立入口、独立向导、独立工作区，内部使用左中右布局、页签、抽屉和步骤状态承载复杂能力。
+          </div>
+          <ul>
+            <li>首页只负责场景选择，不展示复杂表格和全部工具按钮。</li>
+            <li>场景一采用企业工作台布局：左侧资产树，中间预览/编辑/矩阵，右侧详情/确认/问题处理。</li>
+            <li>场景二采用移动端优先的卡片式阶段流程，PC 端补充详细编辑。</li>
+            <li>场景三采用极简行业选择和生成进度，质量报告和接管入口放在结果页。</li>
+            <li>行业模板市场只展示模板、能力范围、适用场景和生成入口；Skill Registry、Adapter 配置、执行日志放入管理/治理页签。</li>
+            <li>Skill Runtime 执行页使用步骤流、日志抽屉、产物列表、质量报告和失败处理，不把所有 Skill 参数摊在主页面。</li>
+            <li>所有 DSL 原文展示放到“开发/治理/高级”页签，不让普通用户直接面对大 JSON。</li>
+            <li>右侧详情面板必须展示字段级问题、追溯关系、影响范围和修复入口。</li>
+          </ul>
+        </section>
+
+        <section class="section" id="backend">
+          <h2>6.2 后端接口与数据约束</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>规范</th>
+                  <th>要求</th>
+                  <th>说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>场景隔离</td>
+                  <td>所有工作区必须有 <code>scene_type</code>。</td>
+                  <td>避免 Axure 导入、人工澄清、行业工厂的数据和 UI 混在一起。</td>
+                </tr>
+                <tr>
+                  <td>DSL 校验</td>
+                  <td>所有写入 DSL 的接口都要走统一 validate service。</td>
+                  <td>保存时返回字段路径和修复建议。</td>
+                </tr>
+                <tr>
+                  <td>版本基线</td>
+                  <td>导入确认、需求确认、开发执行、部署交付前都生成版本。</td>
+                  <td>关键版本支持 diff 和 rollback。</td>
+                </tr>
+                <tr>
+                  <td>智能体执行</td>
+                  <td>Agent 只写入本场景允许的对象。</td>
+                  <td>高风险动作需要二次确认和审计。</td>
+                </tr>
+                <tr>
+                  <td>Harness 集成</td>
+                  <td>交付能力使用现有 Harness connection/handoff。</td>
+                  <td>delivery_dsl 作为 Harness handoff 的标准输入。</td>
+                </tr>
+                <tr>
+                  <td>Skill Runtime 边界</td>
+                  <td>主平台通过标准 API 调用运行时，不把外部底座依赖硬塞进主平台进程。</td>
+                  <td>运行时只返回执行状态、日志摘要、产物索引和质量报告，平台保存治理事实。</td>
+                </tr>
+                <tr>
+                  <td>Skill 契约</td>
+                  <td>所有 Skill 必须有 <code>skill_contract_dsl</code>、输入输出 schema、权限声明和质量门禁。</td>
+                  <td>缺少契约的能力不能被智能体自动调用。</td>
+                </tr>
+                <tr>
+                  <td>外部底座适配</td>
+                  <td>JEECG、RuoYi、NocoBase、DataEase 等全部通过 Adapter 接入。</td>
+                  <td>Adapter 必须可启停、可限流、可 dry-run、可回传产物。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="mobile">
+          <h2>6.3 移动端入口规范</h2>
+          <ul>
+            <li>场景二和场景三优先提供移动端入口。</li>
+            <li>移动端不承载复杂原型编辑器、流程图编辑器和大表格矩阵。</li>
+            <li>移动端职责是输入、澄清、审批、查看结果、接管到 PC。</li>
+            <li>移动端所有确认动作必须展示风险、版本摘要和预计影响范围。</li>
+          </ul>
+        </section>
+
+        <section class="section" id="roadmap">
+          <h2>7.1 阶段路线图</h2>
+          <div class="timeline">
+            <div class="timeline-item">
+              <strong>Phase 0：信息架构与场景入口</strong>
+              <p>拆分三入口，补充 scene_type，定义工作区形态和权限菜单。</p>
+            </div>
+            <div class="timeline-item">
+              <strong>Phase 1：DSL 底座</strong>
+              <p>建立 Schema Registry、统一校验、版本扩展、追溯 ID 规范。</p>
+            </div>
+            <div class="timeline-item">
+              <strong>Phase 2：企业 Axure 主线</strong>
+              <p>完善导入确认、需求映射、测试意图、实现计划、交付门禁。</p>
+            </div>
+            <div class="timeline-item">
+              <strong>Phase 3：企业智能体与 Harness 交付</strong>
+              <p>注册企业原型导入智能体，打通 Harness handoff、执行回写和交付包。</p>
+            </div>
+            <div class="timeline-item">
+              <strong>Phase 4：人机协同自动研发与移动端</strong>
+              <p>实现移动端入口、澄清卡片、阶段门禁、自动开发测试部署。</p>
+            </div>
+            <div class="timeline-item">
+              <strong>Phase 5：全自动行业产品工厂</strong>
+              <p>建设行业模板 DSL、模板市场、全自动智能体和模板实例化流程。</p>
+            </div>
+            <div class="timeline-item">
+              <strong>Phase 6：Skill Runtime 与第一批 Skill</strong>
+              <p>独立部署 Skill Runtime，落地行业模板、数据模型、CRUD、表单、报表、驾驶舱、handoff 第一批 Skill。</p>
+            </div>
+            <div class="timeline-item">
+              <strong>Phase 7：外部底座适配与生态扩展</strong>
+              <p>优先接入 JEECG/RuoYi 类代码生成、NocoBase 类业务系统、JimuBI/DataEase 类报表驾驶舱，再扩展 Appsmith、ToolJet、Windmill 等专项底座。</p>
+            </div>
+            <div class="timeline-item">
+              <strong>Phase 8：模板评测与商业化运营</strong>
+              <p>建立模板黄金样例、自动评测、评分排行、企业接管、交付包和模板迭代机制。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="acceptance">
+          <h2>7.2 验收标准</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>验收项</th>
+                  <th>标准</th>
+                  <th>优先级</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>三入口清晰</td>
+                  <td>用户从首页可以明确选择 Axure 导入、人工澄清自动研发、全自动行业产品，路径不混用。</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td>DSL 可校验</td>
+                  <td>核心 DSL 保存、导入、同步、交付前均执行 Schema 校验。</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td>Axure 主线闭环</td>
+                  <td>导入 Axure 后能确认页面/组件/流程，生成 DSL 基线、测试意图、开发计划和交付包。</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td>追溯可证明</td>
+                  <td>至少支持需求到页面、组件、流程、测试、部署的链路查询。</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td>Harness 可交付</td>
+                  <td>能基于 delivery_dsl 生成 Harness handoff，触发或预演流水线，回写结果。</td>
+                  <td><span class="badge p0">P0</span></td>
+                </tr>
+                <tr>
+                  <td>移动端可确认</td>
+                  <td>场景二关键阶段可在移动端输入和确认，但复杂编辑回到 PC。</td>
+                  <td><span class="badge p1">P1</span></td>
+                </tr>
+                <tr>
+                  <td>行业模板可复用</td>
+                  <td>至少沉淀 3 个行业模板 DSL，可实例化为工作区。</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td>Skill 可注册可编排</td>
+                  <td>至少完成行业模板、数据模型、CRUD、表单、报表、驾驶舱、handoff 7 类 Skill 契约和运行记录。</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td>Skill Runtime 可独立运行</td>
+                  <td>生成任务能异步执行、查看日志、取消、重试、回传产物和质量报告，不依赖主平台进程完成重型构建。</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td>外部底座可适配</td>
+                  <td>至少完成 1 个代码生成底座、1 个业务系统 no-code 底座、1 个报表/驾驶舱底座的 dry-run 与产物回传。</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+                <tr>
+                  <td>行业成品可接管</td>
+                  <td>场景三生成的应用可以一键转入企业工作区，保留模板版本、Skill 执行记录、产物清单和测试报告。</td>
+                  <td><span class="badge p2">P2</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="risks">
+          <h2>7.3 关键风险与控制</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>风险</th>
+                  <th>影响</th>
+                  <th>控制方式</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>DSL 变成巨大 JSON，难以维护</td>
+                  <td>前后端耦合、智能体难复用、版本难 diff。</td>
+                  <td>分层 DSL + schema_version + 引用关系，不做单体 DSL。</td>
+                </tr>
+                <tr>
+                  <td>三场景入口混乱</td>
+                  <td>用户不知道从哪里开始，企业主线被轻量场景稀释。</td>
+                  <td>首页独立入口，scene_type 隔离，工作区 UI 独立。</td>
+                </tr>
+                <tr>
+                  <td>Axure 直接生成代码</td>
+                  <td>缺少确认、追溯和审计，企业不可控。</td>
+                  <td>必须先转 DSL、人工确认、生成版本基线，再进入开发。</td>
+                </tr>
+                <tr>
+                  <td>全自动产品质量不可控</td>
+                  <td>失败率高，影响平台信任。</td>
+                  <td>P2 推进，依赖行业模板、沙箱、自动评测和人工接管。</td>
+                </tr>
+                <tr>
+                  <td>主平台被生成能力拖重</td>
+                  <td>外部依赖、构建环境和低代码平台适配会让主平台后端臃肿且难升级。</td>
+                  <td>采用独立 Skill Runtime，主平台只保留入口、治理、DSL、审计和产物索引。</td>
+                </tr>
+                <tr>
+                  <td>绑定单一外部底座</td>
+                  <td>如果只绑定 JEECG 或某个低代码平台，平台核心能力会被外部技术路线限制。</td>
+                  <td>坚持 Adapter 模式，平台 DSL 为主，外部底座只是目标编译器。</td>
+                </tr>
+                <tr>
+                  <td>Skill 失控调用</td>
+                  <td>智能体可能越权生成、覆盖产物、泄露密钥或触发高风险执行。</td>
+                  <td>Skill Contract 必须声明权限、风险级别、输入输出 schema 和质量门禁，高风险动作走确认和审计。</td>
+                </tr>
+                <tr>
+                  <td>模板库泛化过度</td>
+                  <td>铺太多行业但没有高质量样例，会导致演示不稳定、交付不可控。</td>
+                  <td>先做高频模板和黄金样例，用自动评测保证模板质量，再逐步扩展行业覆盖。</td>
+                </tr>
+                <tr>
+                  <td>移动端承载过重</td>
+                  <td>体验差，复杂编辑难用。</td>
+                  <td>移动端只做输入、确认、审批、结果查看，复杂编辑回 PC。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="footer-note">文档结束。建议后续按 P0 拆成产品原型、数据模型、接口清单和前端页面任务，再逐项实现。</p>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <button class="mobile-menu-button" type="button" id="mobileMenuButton">目录</button>
+
+  <script>
+    const body = document.body;
+    const treeNav = document.getElementById('treeNav');
+    const contentScroll = document.getElementById('contentScroll');
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const links = Array.from(document.querySelectorAll('.tree-link'));
+    const sections = links
+      .map(link => document.querySelector(link.getAttribute('href')))
+      .filter(Boolean);
+
+    document.querySelectorAll('.tree-toggle').forEach(button => {
+      button.addEventListener('click', () => {
+        button.closest('.tree-group').classList.toggle('is-collapsed');
+      });
+    });
+
+    mobileMenuButton.addEventListener('click', () => {
+      body.classList.toggle('menu-open');
+    });
+
+    links.forEach(link => {
+      link.addEventListener('click', () => {
+        body.classList.remove('menu-open');
+      });
+    });
+
+    function setActiveLink() {
+      const scrollTop = contentScroll.scrollTop;
+      let activeId = sections[0] ? sections[0].id : '';
+      for (const section of sections) {
+        if (section.offsetTop - 40 <= scrollTop) {
+          activeId = section.id;
+        }
+      }
+      links.forEach(link => {
+        const isActive = link.getAttribute('href') === '#' + activeId;
+        link.classList.toggle('active', isActive);
+        if (isActive) {
+          link.closest('.tree-group')?.classList.remove('is-collapsed');
+        }
+      });
+    }
+
+    contentScroll.addEventListener('scroll', setActiveLink, { passive: true });
+    window.addEventListener('resize', setActiveLink);
+    setActiveLink();
+  </script>
+</body>
+</html>

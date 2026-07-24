@@ -1,0 +1,25 @@
+services:
+  fake-remote-ssh:
+    build:
+      context: .
+      dockerfile: ssh-gateway.Dockerfile
+    container_name: testhub-fake-remote-ssh
+    environment:
+      SSH_USER: ${FAKE_REMOTE_SSH_USER:-testhub}
+      SSH_PASSWORD: ${FAKE_REMOTE_SSH_PASSWORD:-testhub123}
+      WORKSPACE_ROOT: /workspace
+      TEMPLATE_ROOT: /workspace/deploy/local-fake-remote
+      REMOTE_RUNTIME_DIR: /AIOps/apps/testhub-platform-local-remote
+      FORCE_SYNC_RUNTIME: ${FAKE_REMOTE_FORCE_SYNC_RUNTIME:-0}
+    ports:
+      - "${FAKE_REMOTE_SSH_PORT:-2222}:22"
+    restart: unless-stopped
+    volumes:
+      - ../..:/workspace:ro
+      - fake_remote_runtime:/AIOps/apps
+      - fake_remote_releases:/AIOps/releases
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  fake_remote_runtime:
+  fake_remote_releases:

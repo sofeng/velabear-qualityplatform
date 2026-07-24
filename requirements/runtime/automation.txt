@@ -1,0 +1,13 @@
+allure-pytest==2.15.0
+allure-python-commons==2.15.0
+anthropic==0.107.1
+browser-use==0.10.1
+iniconfig==2.1.0
+langchain-openai==1.1.6
+openai==2.41.0
+playwright==1.60.0
+pluggy==1.6.0
+pytest==8.4.1
+reportlab==4.2.0
+selenium==4.15.2
+webdriver-manager==4.0.1

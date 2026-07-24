@@ -1,0 +1,39 @@
+ARG AI_DEV_BASE=local/testhub-platform-backend-runtime:latest
+FROM ${AI_DEV_BASE}
+
+ARG CODEX_CLI_VERSION=0.88.0
+
+WORKDIR /workspace
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g "@openai/codex@${CODEX_CLI_VERSION}" \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir \
+    anthropic==0.39.0 \
+    pytest-playwright==0.4.4 \
+    aider-chat==0.67.0
+
+COPY deploy/docker/codex-openai-compat-proxy.py /usr/local/bin/testhub-codex-openai-compat-proxy
+
+RUN chmod +x /usr/local/bin/testhub-codex-openai-compat-proxy
+
+RUN git config --global user.name "AI Developer" \
+    && git config --global user.email "ai@testhub.com" \
+    && git config --global core.autocrlf false \
+    && git config --global credential.helper store
+
+RUN mkdir -p /workspace/code
+
+ENV PYTHONUNBUFFERED=1
+ENV NODE_ENV=development
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD git --version && node --version && python --version || exit 1
+
+CMD ["/bin/bash"]

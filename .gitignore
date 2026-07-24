@@ -1,0 +1,74 @@
+# Local environments and editor metadata
+.venv/
+.idea/
+.vscode/
+.claude/
+__pycache__/
+.pytest_cache/
+.DS_Store
+
+# Local notes
+备注笔记.txt
+
+# Environment files
+.env
+*.env.local
+deploy/docker/.env.local
+frontend/.env.local
+
+# Frontend build and dependency outputs
+frontend/dist/
+frontend/node_modules/
+frontend/.DS_Store
+frontend/*.log
+
+# Generated seed and deployment bundles
+.docker-data/
+.seed_exports/
+deploy/seed_exports/
+.offline_bundle/
+.bundle_stage/
+.release_out/
+.release_out_localtest/
+.codex-temp/
+deploy/init-seed/*
+!deploy/init-seed/.gitkeep
+
+# Runtime logs and local state
+logs/*
+!logs/.gitkeep
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+smoke_workflow.sqlite3
+deploy/.tmp-init-seed-*/
+.codex/
+.tmp*/
+.tmp-*
+.tmp_*
+playwright_snapshot/*
+!playwright_snapshot/.snapshot-meta.json
+*.tmp
+tmp_*.zip
+tmp_*.py
+nul
+
+# Local verification/input materials
+AI工坊/
+README-AI*.md
+平台资料/axure/
+平台资料/axure-html/
+平台资料/axure-单html/
+平台资料/对话调试/
+平台资料/临时日志/
+
+# Generated media content
+media/allure-reports/*
+!media/allure-reports/.gitkeep
+media/allure-results/*
+!media/allure-results/.gitkeep
+media/requirement_docs/*
+!media/requirement_docs/.gitkeep
+media/ai_recording/*
+!media/ai_recording/.gitkeep
+media/deployment-executions/

@@ -1,0 +1,87 @@
+services:
+  testhub-mysql:
+    container_name: testhub-local-mysql
+
+  testhub-redis:
+    container_name: testhub-local-redis
+
+  testhub-backend-init:
+    container_name: testhub-local-backend-init
+    volumes:
+      - ../../.docker-data/testhub-platform-local/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-local/media:/app/media:z
+      - ../../.docker-data/testhub-platform-local/static:/app/static:z
+      - ../../.docker-data/testhub-platform-local/logs:/app/logs:z
+      - ../../.release_out:/workspace-release:ro
+      - ../..:/workspace/source-repo:ro
+
+  testhub-backend:
+    container_name: testhub-local-backend
+    environment:
+      PLAYWRIGHT_RECORDER_USE_XVFB: ${PLAYWRIGHT_RECORDER_USE_XVFB:-1}
+      PLAYWRIGHT_RECORDER_XVFB_DISPLAY: ${PLAYWRIGHT_RECORDER_XVFB_DISPLAY:-:99}
+      PLAYWRIGHT_RECORDER_XVFB_SCREEN: ${PLAYWRIGHT_RECORDER_XVFB_SCREEN:-1920x1080x24}
+      PLAYWRIGHT_RECORDER_CDP_PORT: ${PLAYWRIGHT_RECORDER_CDP_PORT:-9222}
+      PLAYWRIGHT_RECORDER_CDP_INTERNAL_PORT: ${PLAYWRIGHT_RECORDER_CDP_INTERNAL_PORT:-9333}
+      PLAYWRIGHT_RECORDER_CDP_HOST_PORT: ${PLAYWRIGHT_RECORDER_CDP_HOST_PORT:-49222}
+      PLAYWRIGHT_RECORDER_DEVTOOLS_EXTERNAL_ORIGIN: ${PLAYWRIGHT_RECORDER_DEVTOOLS_EXTERNAL_ORIGIN:-http://localhost:49222}
+      PLAYWRIGHT_RECORDER_LOCALHOST_REWRITE_HOST: ${PLAYWRIGHT_RECORDER_LOCALHOST_REWRITE_HOST:-host.docker.internal}
+      PLAYWRIGHT_RECORDER_NOVNC_ENABLED: ${PLAYWRIGHT_RECORDER_NOVNC_ENABLED:-1}
+      PLAYWRIGHT_RECORDER_VNC_PORT: ${PLAYWRIGHT_RECORDER_VNC_PORT:-5900}
+      PLAYWRIGHT_RECORDER_NOVNC_PORT: ${PLAYWRIGHT_RECORDER_NOVNC_PORT:-6080}
+      PLAYWRIGHT_RECORDER_NOVNC_HOST_PORT: ${PLAYWRIGHT_RECORDER_NOVNC_HOST_PORT:-46080}
+      PLAYWRIGHT_RECORDER_NOVNC_EXTERNAL_ORIGIN: ${PLAYWRIGHT_RECORDER_NOVNC_EXTERNAL_ORIGIN:-http://localhost:46080}
+      PLAYWRIGHT_RECORDER_NOVNC_PATH: ${PLAYWRIGHT_RECORDER_NOVNC_PATH:-websockify}
+      PLAYWRIGHT_RECORDER_NOVNC_RESIZE: ${PLAYWRIGHT_RECORDER_NOVNC_RESIZE:-scale}
+      PLAYWRIGHT_RECORDER_FCITX_ENABLED: ${PLAYWRIGHT_RECORDER_FCITX_ENABLED:-1}
+      PLAYWRIGHT_RECORDER_MAX_SESSIONS: ${PLAYWRIGHT_RECORDER_MAX_SESSIONS:-5}
+      PLAYWRIGHT_RECORDER_READY_TIMEOUT: ${PLAYWRIGHT_RECORDER_READY_TIMEOUT:-45}
+      PLAYWRIGHT_RECORDER_CHROMIUM_LAUNCH_TIMEOUT: ${PLAYWRIGHT_RECORDER_CHROMIUM_LAUNCH_TIMEOUT:-30000}
+      PLAYWRIGHT_RECORDER_INITIAL_NAVIGATION_TIMEOUT: ${PLAYWRIGHT_RECORDER_INITIAL_NAVIGATION_TIMEOUT:-30000}
+      PLAYWRIGHT_RECORDER_DESKTOP_READY_TIMEOUT: ${PLAYWRIGHT_RECORDER_DESKTOP_READY_TIMEOUT:-8}
+      PLAYWRIGHT_RECORDER_IGNORE_HTTPS_ERRORS: ${PLAYWRIGHT_RECORDER_IGNORE_HTTPS_ERRORS:-1}
+    ports: !override
+      - "${BACKEND_HOST_PORT:-48000}:8000"
+      - "${PLAYWRIGHT_RECORDER_CDP_HOST_PORT:-49222}-${PLAYWRIGHT_RECORDER_CDP_HOST_PORT_END:-49262}:${PLAYWRIGHT_RECORDER_CDP_PORT:-9222}-${PLAYWRIGHT_RECORDER_CDP_PORT_END:-9262}"
+      - "127.0.0.1:${PLAYWRIGHT_RECORDER_NOVNC_HOST_PORT:-46080}-${PLAYWRIGHT_RECORDER_NOVNC_HOST_PORT_END:-46120}:${PLAYWRIGHT_RECORDER_NOVNC_PORT:-6080}-${PLAYWRIGHT_RECORDER_NOVNC_PORT_END:-6120}"
+    volumes:
+      - ../../.docker-data/testhub-platform-local/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-local/media:/app/media:z
+      - ../../.docker-data/testhub-platform-local/static:/app/static:z
+      - ../../.docker-data/testhub-platform-local/logs:/app/logs:z
+      - ../../.release_out:/workspace-release:ro
+      - ../..:/workspace/source-repo:ro
+      - ../../playwright_snapshot:/app/playwright_snapshot
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  testhub-celery-worker:
+    container_name: testhub-local-celery-worker
+    volumes:
+      - ../../.docker-data/testhub-platform-local/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-local/media:/app/media:z
+      - ../../.docker-data/testhub-platform-local/static:/app/static:z
+      - ../../.docker-data/testhub-platform-local/logs:/app/logs:z
+      - ../../.release_out:/workspace-release:ro
+      - ../..:/workspace/source-repo:ro
+      - ../../playwright_snapshot:/app/playwright_snapshot
+
+  testhub-ai-dev-worker:
+    container_name: testhub-local-ai-dev-worker
+    volumes:
+      - ../../.docker-data/testhub-platform-local/appdata:/app/data:z
+      - ../../.docker-data/testhub-platform-local/media:/app/media:z
+      - ../../.docker-data/testhub-platform-local/static:/app/static:z
+      - ../../.docker-data/testhub-platform-local/logs:/app/logs:z
+      - ../../.release_out:/workspace-release:ro
+      - ../..:/workspace/source-repo:ro
+      - ../../playwright_snapshot:/app/playwright_snapshot
+
+  testhub-frontend:
+    container_name: testhub-local-frontend
+
+  testhub-codex-runtime:
+    container_name: testhub-local-codex-runtime
+
+  testhub-claude-runtime:
+    container_name: testhub-local-claude-runtime

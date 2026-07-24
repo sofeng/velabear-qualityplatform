@@ -1,0 +1,2794 @@
+<template>
+  <div class="manual-testcase-editor">
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <div class="header-left">
+            <el-button @click="handleBack" size="small">
+              <el-icon><ArrowLeft /></el-icon>
+              返回
+            </el-button>
+            <span class="title">{{ mindmapName }}</span>
+          </div>
+          <div class="actions">
+            <el-button type="primary" @click="handleSave">
+              <el-icon><DocumentAdd /></el-icon>
+              保存
+            </el-button>
+
+            <!-- 导出下拉菜单 -->
+            <el-dropdown @command="handleExportCommand" trigger="click">
+              <el-button>
+                <el-icon><Download /></el-icon>
+                导出 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="json">
+                    <el-icon><Document /></el-icon> JSON格式
+                  </el-dropdown-item>
+                  <el-dropdown-item command="png">
+                    <el-icon><Picture /></el-icon> PNG图片
+                  </el-dropdown-item>
+                  <el-dropdown-item command="svg">
+                    <el-icon><PictureFilled /></el-icon> SVG矢量图
+                  </el-dropdown-item>
+                  <el-dropdown-item divided command="markdown">
+                    <el-icon><Document /></el-icon> Markdown
+                  </el-dropdown-item>
+                  <el-dropdown-item command="text">
+                    <el-icon><Document /></el-icon> 纯文本
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+
+            <!-- 导入下拉菜单 -->
+            <el-dropdown @command="handleImportCommand" trigger="click">
+              <el-button>
+                <el-icon><Upload /></el-icon>
+                导入 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="json">
+                    <el-icon><Document /></el-icon> JSON格式
+                  </el-dropdown-item>
+                  <el-dropdown-item command="xmind">
+                    <el-icon><Document /></el-icon> XMind文件
+                  </el-dropdown-item>
+                  <el-dropdown-item command="markdown">
+                    <el-icon><Document /></el-icon> Markdown
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+        </div>
+      </template>
+
+      <!-- 脑图工具栏 -->
+      <div class="minder-toolbar">
+        <!-- 文件操作 -->
+        <el-button-group>
+          <el-button size="small" @click="execCommand('Undo')" :disabled="!canUndo">
+            <el-icon><RefreshLeft /></el-icon> 撤销
+          </el-button>
+          <el-button size="small" @click="execCommand('Redo')" :disabled="!canRedo">
+            <el-icon><RefreshRight /></el-icon> 重做
+          </el-button>
+        </el-button-group>
+
+        <el-divider direction="vertical" />
+
+        <!-- 基础编辑 -->
+        <el-button-group>
+          <el-button size="small" @click="execCommand('AppendChildNode')" :disabled="!hasSelection">
+            <el-icon><Plus /></el-icon> 子节点 (Tab)
+          </el-button>
+          <el-button size="small" @click="execCommand('AppendSiblingNode')" :disabled="!hasSelection">
+            <el-icon><Plus /></el-icon> 同级 (Enter)
+          </el-button>
+          <el-button size="small" @click="execCommand('RemoveNode')" :disabled="!hasSelection || isRootSelected">
+            <el-icon><Delete /></el-icon> 删除 (Del)
+          </el-button>
+        </el-button-group>
+
+        <el-divider direction="vertical" />
+
+        <!-- 复制粘贴 -->
+        <el-button-group>
+          <el-button size="small" @click="execCommand('Copy')" :disabled="!hasSelection">
+            <el-icon><CopyDocument /></el-icon> 复制
+          </el-button>
+          <el-button size="small" @click="execCommand('Cut')" :disabled="!hasSelection || isRootSelected">
+            <el-icon><Scissor /></el-icon> 剪切
+          </el-button>
+          <el-button size="small" @click="execCommand('Paste')" :disabled="!hasClipboard">
+            <el-icon><DocumentCopy /></el-icon> 粘贴
+          </el-button>
+        </el-button-group>
+
+        <el-divider direction="vertical" />
+
+        <!-- 节点类型 -->
+        <el-select
+          v-model="currentNodeType"
+          size="small"
+          style="width: 100px"
+          :disabled="!hasSelection"
+          @change="setNodeType"
+          placeholder="节点类型"
+        >
+          <el-option label="📦 模块" value="module" />
+          <el-option label="📝 用例" value="case" />
+          <el-option label="📋 需求" value="requirement" />
+        </el-select>
+
+        <!-- 优先级 -->
+        <el-select
+          v-model="currentPriority"
+          size="small"
+          style="width: 100px"
+          :disabled="!hasSelection"
+          @change="setPriority"
+          placeholder="优先级"
+        >
+          <el-option label="🔴 P0" :value="0" />
+          <el-option label="🟠 P1" :value="1" />
+          <el-option label="🟡 P2" :value="2" />
+          <el-option label="🔵 P3" :value="3" />
+        </el-select>
+
+        <!-- 用例状态 -->
+        <el-select
+          v-model="currentStatus"
+          size="small"
+          style="width: 120px"
+          :disabled="!hasSelection"
+          @change="setStatus"
+          placeholder="状态"
+        >
+          <el-option label="⚪ 未执行" value="not_run" />
+          <el-option label="✅ 通过" value="pass" />
+          <el-option label="❌ 失败" value="fail" />
+          <el-option label="🚫 阻塞" value="block" />
+        </el-select>
+
+        <!-- 标签 -->
+        <el-button size="small" :disabled="!hasSelection" @click="showTagDialog">
+          <el-icon><PriceTag /></el-icon> 标签
+        </el-button>
+
+        <el-divider direction="vertical" />
+
+        <!-- 过滤 -->
+        <el-button size="small" @click="showFilterDialog">
+          <el-icon><Filter /></el-icon> 过滤
+        </el-button>
+        <el-button size="small" @click="clearFilter" v-if="hasFilter">
+          <el-icon><RefreshLeft /></el-icon> 清除过滤
+        </el-button>
+
+        <el-divider direction="vertical" />
+
+        <!-- 布局模板 -->
+        <el-select v-model="currentTemplate" size="small" style="width: 130px" @change="changeTemplate" placeholder="布局">
+          <el-option label="思维导图" value="default" />
+          <el-option label="组织结构图" value="structure" />
+          <el-option label="目录组织图" value="filetree" />
+          <el-option label="右侧逻辑图" value="right" />
+          <el-option label="天盘图" value="tianpan" />
+        </el-select>
+
+        <!-- 主题 -->
+        <el-select v-model="currentTheme" size="small" style="width: 120px" @change="changeTheme" placeholder="主题">
+          <el-option label="天空蓝" value="fresh-blue" />
+          <el-option label="文艺绿" value="fresh-green" />
+          <el-option label="脑残粉" value="fresh-pink" />
+          <el-option label="清新红" value="fresh-red" />
+          <el-option label="简约黑" value="classic" />
+          <el-option label="简约白" value="classic-compact" />
+          <el-option label="鱼骨图" value="fish" />
+          <el-option label="线条图" value="wire" />
+        </el-select>
+
+        <el-divider direction="vertical" />
+
+        <!-- 样式设置 -->
+        <el-dropdown @command="handleStyleCommand" trigger="click">
+          <el-button size="small">
+            <el-icon><Brush /></el-icon> 样式
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="bold">
+                <strong>B</strong> 加粗
+              </el-dropdown-item>
+              <el-dropdown-item command="italic">
+                <em>I</em> 斜体
+              </el-dropdown-item>
+              <el-dropdown-item divided command="forecolor">
+                <el-icon><Brush /></el-icon> 文字颜色
+              </el-dropdown-item>
+              <el-dropdown-item command="background">
+                <el-icon><Grid /></el-icon> 背景颜色
+              </el-dropdown-item>
+              <el-dropdown-item divided command="fontsize">
+                <el-icon><Setting /></el-icon> 字体大小
+              </el-dropdown-item>
+              <el-dropdown-item command="fontfamily">
+                <el-icon><Reading /></el-icon> 字体
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+
+        <!-- 备注 -->
+        <el-button size="small" @click="showNoteDialog" :disabled="!hasSelection">
+          <el-icon><Memo /></el-icon> 备注
+        </el-button>
+
+        <!-- 图标 -->
+        <el-dropdown @command="handleIconCommand" trigger="click">
+          <el-button size="small" :disabled="!hasSelection">
+            <el-icon><Star /></el-icon> 图标
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="priority-0">🔴 优先级0</el-dropdown-item>
+              <el-dropdown-item command="priority-1">🟠 优先级1</el-dropdown-item>
+              <el-dropdown-item command="priority-2">🟡 优先级2</el-dropdown-item>
+              <el-dropdown-item command="priority-3">🔵 优先级3</el-dropdown-item>
+              <el-dropdown-item divided command="check">✅ 完成</el-dropdown-item>
+              <el-dropdown-item command="cross">❌ 失败</el-dropdown-item>
+              <el-dropdown-item command="question">❓ 疑问</el-dropdown-item>
+              <el-dropdown-item command="star">⭐ 重要</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+
+        <el-divider direction="vertical" />
+
+        <!-- 视图控制 -->
+        <el-button-group>
+          <el-button size="small" @click="execCommand('ZoomIn')">
+            <el-icon><ZoomIn /></el-icon>
+          </el-button>
+          <el-button size="small" @click="execCommand('ZoomOut')">
+            <el-icon><ZoomOut /></el-icon>
+          </el-button>
+          <el-button size="small" @click="execCommand('Camera')">
+            <el-icon><Location /></el-icon> 居中
+          </el-button>
+        </el-button-group>
+
+        <!-- 详情面板切换 -->
+        <el-button size="small" @click="showDetailPanel = !showDetailPanel">
+          <el-icon><Operation /></el-icon> {{ showDetailPanel ? '隐藏' : '显示' }}详情
+        </el-button>
+      </div>
+
+      <!-- 主内容区：脑图 + 详情面板 -->
+      <div class="main-content">
+        <!-- 脑图容器 -->
+        <div class="minder-container" :class="{ 'with-panel': showDetailPanel }">
+          <div id="minder-editor" tabindex="0" :style="{ height: editorHeight }"></div>
+        </div>
+
+        <!-- 节点详情面板 -->
+        <transition name="slide-left">
+          <div v-if="showDetailPanel" class="detail-panel">
+            <div class="panel-header">
+              <h3>节点详情</h3>
+              <el-button text @click="showDetailPanel = false">
+                <el-icon><Close /></el-icon>
+              </el-button>
+            </div>
+
+            <div class="panel-content" v-if="hasSelection">
+              <!-- 基本信息 -->
+              <el-form label-width="80px" size="small">
+                <el-form-item label="节点文本">
+                  <el-input v-model="nodeText" @blur="updateNodeText" @keyup.enter="updateNodeText" />
+                </el-form-item>
+
+                <el-form-item label="节点类型">
+                  <el-select v-model="currentNodeType" @change="setNodeType" style="width: 100%">
+                    <el-option label="📦 模块" value="module" />
+                    <el-option label="📝 用例" value="case" />
+                    <el-option label="📋 需求" value="requirement" />
+                  </el-select>
+                </el-form-item>
+
+                <el-form-item label="优先级">
+                  <el-radio-group v-model="currentPriority" @change="setPriority">
+                    <el-radio :value="0" border>🔴 P0</el-radio>
+                    <el-radio :value="1" border>🟠 P1</el-radio>
+                    <el-radio :value="2" border>🟡 P2</el-radio>
+                    <el-radio :value="3" border>🔵 P3</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+
+                <el-form-item label="状态">
+                  <el-radio-group v-model="currentStatus" @change="setStatus">
+                    <el-radio value="not_run" border>⚪ 未执行</el-radio>
+                    <el-radio value="pass" border>✅ 通过</el-radio>
+                    <el-radio value="fail" border>❌ 失败</el-radio>
+                    <el-radio value="block" border>🚫 阻塞</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+
+                <el-form-item label="标签">
+                  <div class="tags-container">
+                    <el-tag
+                      v-for="tag in currentTags"
+                      :key="tag"
+                      closable
+                      @close="removeTag(tag)"
+                      style="margin-right: 5px; margin-bottom: 5px"
+                      :type="getTagType(tag)"
+                    >
+                      {{ tag }}
+                    </el-tag>
+                    <el-button size="small" @click="showTagDialog">+ 添加标签</el-button>
+                  </div>
+                </el-form-item>
+
+                <el-divider />
+
+                <!-- 扩展字段（用例专用） -->
+                <h4>用例详细信息</h4>
+
+                <el-form-item label="用例ID">
+                  <el-input v-model="nodeData.caseId" @blur="updateNodeData" placeholder="TC-XXX-001" />
+                </el-form-item>
+
+                <el-form-item label="前置条件">
+                  <el-input
+                    v-model="nodeData.preCondition"
+                    type="textarea"
+                    :rows="2"
+                    @blur="updateNodeData"
+                    placeholder="执行此用例前需要满足的条件"
+                  />
+                </el-form-item>
+
+                <el-form-item label="测试步骤">
+                  <el-input
+                    v-model="nodeData.steps"
+                    type="textarea"
+                    :rows="4"
+                    @blur="updateNodeData"
+                    placeholder="1. 步骤一&#10;2. 步骤二&#10;3. 步骤三"
+                  />
+                </el-form-item>
+
+                <el-form-item label="期望结果">
+                  <el-input
+                    v-model="nodeData.expect"
+                    type="textarea"
+                    :rows="3"
+                    @blur="updateNodeData"
+                    placeholder="期望的测试结果"
+                  />
+                </el-form-item>
+
+                <el-form-item label="备注">
+                  <el-input
+                    v-model="nodeData.remark"
+                    type="textarea"
+                    :rows="2"
+                    @blur="updateNodeData"
+                    placeholder="其他补充说明"
+                  />
+                </el-form-item>
+              </el-form>
+            </div>
+
+            <div class="panel-content" v-else>
+              <el-empty description="请选择一个节点" />
+            </div>
+          </div>
+        </transition>
+      </div>
+    </el-card>
+
+    <!-- 标签管理对话框 -->
+    <el-dialog v-model="tagDialogVisible" title="管理标签" width="500px">
+      <el-form>
+        <el-form-item label="添加标签">
+          <el-input
+            v-model="newTag"
+            placeholder="输入标签名称"
+            @keyup.enter="addTag"
+          >
+            <template #append>
+              <el-button @click="addTag">添加</el-button>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="当前标签">
+          <div class="tags-container">
+            <el-tag
+              v-for="tag in currentTags"
+              :key="tag"
+              closable
+              @close="removeTag(tag)"
+              style="margin-right: 5px; margin-bottom: 5px"
+              :type="getTagType(tag)"
+            >
+              {{ tag }}
+            </el-tag>
+            <span v-if="currentTags.length === 0" style="color: #999">暂无标签</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="常用标签">
+          <el-button-group>
+            <el-button size="small" @click="addPresetTag('正向')">正向</el-button>
+            <el-button size="small" @click="addPresetTag('负向')">负向</el-button>
+            <el-button size="small" @click="addPresetTag('接口')">接口</el-button>
+            <el-button size="small" @click="addPresetTag('UI')">UI</el-button>
+            <el-button size="small" @click="addPresetTag('冒烟')">冒烟</el-button>
+            <el-button size="small" @click="addPresetTag('核心')">核心</el-button>
+            <el-button size="small" @click="addPresetTag('性能')">性能</el-button>
+            <el-button size="small" @click="addPresetTag('安全')">安全</el-button>
+          </el-button-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="tagDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 过滤对话框 -->
+    <el-dialog v-model="filterDialogVisible" title="过滤用例" width="500px">
+      <el-form label-width="80px">
+        <el-form-item label="优先级">
+          <el-checkbox-group v-model="filterOptions.priorities">
+            <el-checkbox :value="0">🔴 P0</el-checkbox>
+            <el-checkbox :value="1">🟠 P1</el-checkbox>
+            <el-checkbox :value="2">🟡 P2</el-checkbox>
+            <el-checkbox :value="3">🔵 P3</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-checkbox-group v-model="filterOptions.statuses">
+            <el-checkbox value="not_run">⚪ 未执行</el-checkbox>
+            <el-checkbox value="pass">✅ 通过</el-checkbox>
+            <el-checkbox value="fail">❌ 失败</el-checkbox>
+            <el-checkbox value="block">🚫 阻塞</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+        <el-form-item label="标签">
+          <el-input v-model="filterOptions.tag" placeholder="输入标签名称（留空表示不过滤）" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="filterDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="applyFilter">应用过滤</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 备注对话框 -->
+    <el-dialog v-model="noteDialogVisible" title="编辑备注" width="600px">
+      <el-tabs v-model="noteTab" type="border-card">
+        <el-tab-pane label="Markdown" name="markdown">
+          <el-input
+            v-model="currentNote"
+            type="textarea"
+            :rows="10"
+            placeholder="支持Markdown语法&#10;&#10;# 标题&#10;- 列表项&#10;**粗体** *斜体*&#10;```代码块```"
+          />
+        </el-tab-pane>
+        <el-tab-pane label="预览" name="preview">
+          <div class="note-preview" v-html="renderedNote"></div>
+        </el-tab-pane>
+      </el-tabs>
+      <template #footer>
+        <el-button @click="noteDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveNote">保存备注</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 颜色选择对话框 -->
+    <el-dialog v-model="colorDialogVisible" :title="colorDialogTitle" width="400px">
+      <div class="color-picker-container">
+        <el-color-picker v-model="selectedColor" show-alpha />
+        <div class="color-presets">
+          <h4>预设颜色</h4>
+          <div class="color-grid">
+            <div
+              v-for="color in presetColors"
+              :key="color"
+              class="color-item"
+              :style="{ backgroundColor: color }"
+              @click="selectedColor = color"
+            ></div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="colorDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="applyColor">应用</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 字体大小对话框 -->
+    <el-dialog v-model="fontSizeDialogVisible" title="设置字体大小" width="300px">
+      <el-slider v-model="fontSize" :min="12" :max="48" :step="2" show-stops />
+      <div style="text-align: center; margin-top: 10px">
+        当前大小: {{ fontSize }}px
+      </div>
+      <template #footer>
+        <el-button @click="fontSizeDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="applyFontSize">应用</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 字体选择对话框 -->
+    <el-dialog v-model="fontFamilyDialogVisible" title="设置字体" width="400px">
+      <el-radio-group v-model="fontFamily" style="display: flex; flex-direction: column; gap: 10px">
+        <el-radio value="Microsoft YaHei, 微软雅黑">微软雅黑</el-radio>
+        <el-radio value="SimSun, 宋体">宋体</el-radio>
+        <el-radio value="SimHei, 黑体">黑体</el-radio>
+        <el-radio value="KaiTi, 楷体">楷体</el-radio>
+        <el-radio value="Arial, sans-serif">Arial</el-radio>
+        <el-radio value="Times New Roman, serif">Times New Roman</el-radio>
+        <el-radio value="Courier New, monospace">Courier New (等宽)</el-radio>
+      </el-radio-group>
+      <template #footer>
+        <el-button @click="fontFamilyDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="applyFontFamily">应用</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import {
+  DocumentAdd, Download, Upload, Edit, ZoomIn, ZoomOut,
+  Plus, Delete, PriceTag, Filter, RefreshLeft, RefreshRight, Operation, Close,
+  CopyDocument, Scissor, DocumentCopy, ArrowDown, Document, Picture, PictureFilled,
+  Brush, EditPen, Grid, Reading, Memo, Star, Setting, Location, ArrowLeft
+} from '@element-plus/icons-vue'
+import JSZip from 'jszip'
+import api from '@/utils/api'
+import { useRoute, useRouter } from 'vue-router'
+
+const route = useRoute()
+const router = useRouter()
+
+// KityMinder实例
+let minder = null
+
+// 当前选中的节点文本
+const nodeText = ref('')
+// 是否有选中的节点
+const hasSelection = ref(false)
+// 是否选中了根节点
+const isRootSelected = ref(false)
+// 当前主题和布局
+const currentTheme = ref('fresh-blue')
+const currentTemplate = ref('default')
+
+// 编辑状态
+const canUndo = ref(false)
+const canRedo = ref(false)
+const hasClipboard = ref(false)
+
+// 节点属性
+const currentNodeType = ref('')
+const currentPriority = ref(null)
+const currentStatus = ref('')
+const currentTags = ref([])
+
+// 备注
+const currentNote = ref('')
+const noteTab = ref('markdown')
+const renderedNote = computed(() => {
+  // 简单的Markdown渲染（实际项目可用marked库）
+  return currentNote.value
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/\n/g, '<br>')
+})
+
+// 节点详细数据
+const nodeData = ref({
+  caseId: '',
+  preCondition: '',
+  steps: '',
+  expect: '',
+  remark: ''
+})
+
+// UI控制
+const showDetailPanel = ref(true)
+const tagDialogVisible = ref(false)
+const filterDialogVisible = ref(false)
+const noteDialogVisible = ref(false)
+const colorDialogVisible = ref(false)
+const colorDialogTitle = ref('')
+const colorDialogType = ref('') // 'forecolor' or 'background'
+const fontSizeDialogVisible = ref(false)
+const fontFamilyDialogVisible = ref(false)
+const newTag = ref('')
+
+// 样式设置
+const selectedColor = ref('#000000')
+const fontSize = ref(14)
+const fontFamily = ref('Microsoft YaHei, 微软雅黑')
+
+// 预设颜色
+const presetColors = [
+  '#000000', '#333333', '#666666', '#999999', '#CCCCCC', '#FFFFFF',
+  '#f5222d', '#fa541c', '#fa8c16', '#faad14', '#fadb14', '#a0d911',
+  '#52c41a', '#13c2c2', '#1890ff', '#2f54eb', '#722ed1', '#eb2f96'
+]
+
+// 过滤选项
+const filterOptions = ref({
+  priorities: [],
+  statuses: [],
+  tag: ''
+})
+const hasFilter = ref(false)
+
+// 脑图数据
+const minderData = ref({
+  root: {
+    data: {
+      text: '新建脑图',
+      nodeType: 'module'
+    },
+    children: []
+  }
+})
+
+// 当前脑图ID（编辑模式时使用）
+const currentMindmapId = ref(null)
+// 脑图名称
+const mindmapName = ref('新建脑图')
+// 脑图描述
+const mindmapDescription = ref('')
+
+// 编辑器高度
+const editorHeight = computed(() => {
+  return window.innerHeight - 280 + 'px'
+})
+
+// 获取当前选中的节点
+const getCurrentNode = () => {
+  if (!minder) return null
+  return minder.getSelectedNode()
+}
+
+// 获取节点数据
+const getNodeData = (node) => {
+  if (!node) return {}
+  return node.getData() || {}
+}
+
+// 设置节点数据
+const setNodeData = (node, key, value) => {
+  if (!node) return
+  const data = getNodeData(node)
+  data[key] = value
+  node.setData(key, value)
+  minder.fire('contentchange')
+}
+
+// 执行KityMinder命令
+const execCommand = (command) => {
+  if (!minder) {
+    ElMessage.warning('脑图未初始化')
+    return
+  }
+  try {
+    minder.execCommand(command)
+  } catch (error) {
+    console.error('执行命令失败:', command, error)
+  }
+}
+
+// 更新节点文本
+const updateNodeText = () => {
+  if (!minder || !hasSelection.value || !nodeText.value.trim()) {
+    return
+  }
+  try {
+    minder.execCommand('text', nodeText.value)
+  } catch (error) {
+    console.error('更新节点文本失败:', error)
+  }
+}
+
+// 更新节点数据
+const updateNodeData = () => {
+  const node = getCurrentNode()
+  if (!node) return
+
+  setNodeData(node, 'caseId', nodeData.value.caseId)
+  setNodeData(node, 'preCondition', nodeData.value.preCondition)
+  setNodeData(node, 'steps', nodeData.value.steps)
+  setNodeData(node, 'expect', nodeData.value.expect)
+  setNodeData(node, 'remark', nodeData.value.remark)
+}
+
+// 切换主题
+const changeTheme = () => {
+  if (minder) {
+    minder.execCommand('Theme', currentTheme.value)
+  }
+}
+
+// 切换布局模板
+const changeTemplate = () => {
+  if (minder) {
+    minder.execCommand('Template', currentTemplate.value)
+    setTimeout(() => {
+      minder.execCommand('Camera')
+    }, 100)
+  }
+}
+
+// 设置节点类型
+const setNodeType = () => {
+  const node = getCurrentNode()
+  if (!node) return
+  setNodeData(node, 'nodeType', currentNodeType.value)
+  updateNodeStyle(node)
+}
+
+// 设置优先级
+const setPriority = () => {
+  const node = getCurrentNode()
+  if (!node) return
+  setNodeData(node, 'priority', currentPriority.value)
+  updateNodeStyle(node)
+}
+
+// 设置状态
+const setStatus = () => {
+  const node = getCurrentNode()
+  if (!node) return
+  setNodeData(node, 'status', currentStatus.value)
+  updateNodeStyle(node)
+}
+
+// 更新节点样式（根据属性）
+const updateNodeStyle = (node) => {
+  if (!node) return
+  const data = getNodeData(node)
+
+  // 根据优先级设置文字颜色
+  if (data.priority !== undefined) {
+    const colors = ['#f5222d', '#fa8c16', '#fadb14', '#1890ff']
+    minder.execCommand('ForeColor', colors[data.priority])
+  }
+
+  // 根据状态设置背景色
+  if (data.status) {
+    const bgColors = {
+      'not_run': '#f0f0f0',
+      'pass': '#f6ffed',
+      'fail': '#fff2f0',
+      'block': '#fff7e6'
+    }
+    // Note: KityMinder的背景色设置可能需要自定义渲染
+  }
+}
+
+// 标签相关方法
+const showTagDialog = () => {
+  tagDialogVisible.value = true
+}
+
+const addTag = () => {
+  if (!newTag.value.trim()) {
+    ElMessage.warning('请输入标签名称')
+    return
+  }
+
+  const node = getCurrentNode()
+  if (!node) {
+    ElMessage.warning('请先选择节点')
+    return
+  }
+
+  if (currentTags.value.includes(newTag.value)) {
+    ElMessage.warning('标签已存在')
+    return
+  }
+
+  currentTags.value.push(newTag.value)
+  setNodeData(node, 'tags', [...currentTags.value])
+  newTag.value = ''
+  ElMessage.success('标签添加成功')
+}
+
+const addPresetTag = (tag) => {
+  const node = getCurrentNode()
+  if (!node) {
+    ElMessage.warning('请先选择节点')
+    return
+  }
+
+  if (currentTags.value.includes(tag)) {
+    ElMessage.warning('标签已存在')
+    return
+  }
+
+  currentTags.value.push(tag)
+  setNodeData(node, 'tags', [...currentTags.value])
+  ElMessage.success('标签添加成功')
+}
+
+const removeTag = (tag) => {
+  const node = getCurrentNode()
+  if (!node) return
+
+  currentTags.value = currentTags.value.filter(t => t !== tag)
+  setNodeData(node, 'tags', [...currentTags.value])
+  ElMessage.success('标签已删除')
+}
+
+const getTagType = (tag) => {
+  const typeMap = {
+    '正向': 'success',
+    '负向': 'danger',
+    '接口': 'primary',
+    'UI': 'warning',
+    '冒烟': 'danger',
+    '核心': 'danger',
+    '性能': 'warning',
+    '安全': 'danger'
+  }
+  return typeMap[tag] || 'info'
+}
+
+// 过滤相关方法
+const showFilterDialog = () => {
+  filterDialogVisible.value = true
+}
+
+const applyFilter = () => {
+  if (!minder) return
+
+  const { priorities, statuses, tag } = filterOptions.value
+
+  // 如果所有过滤条件都为空，则显示全部
+  if (priorities.length === 0 && statuses.length === 0 && !tag) {
+    clearFilter()
+    return
+  }
+
+  hasFilter.value = true
+
+  // 遍历所有节点，根据过滤条件显示/隐藏
+  const root = minder.getRoot()
+  filterNode(root)
+
+  filterDialogVisible.value = false
+  ElMessage.success('过滤已应用')
+}
+
+const filterNode = (node) => {
+  if (!node) return true
+
+  const data = getNodeData(node)
+  const { priorities, statuses, tag } = filterOptions.value
+
+  let visible = true
+
+  // 优先级过滤
+  if (priorities.length > 0 && data.priority !== undefined) {
+    visible = visible && priorities.includes(data.priority)
+  }
+
+  // 状态过滤
+  if (statuses.length > 0 && data.status) {
+    visible = visible && statuses.includes(data.status)
+  }
+
+  // 标签过滤
+  if (tag && data.tags) {
+    visible = visible && data.tags.some(t => t.includes(tag))
+  }
+
+  // 递归处理子节点
+  const children = node.getChildren()
+  if (children && children.length > 0) {
+    children.forEach(child => filterNode(child))
+  }
+
+  // 设置节点可见性
+  if (node !== minder.getRoot()) {
+    if (visible) {
+      node.setData('_visible', true)
+    } else {
+      node.setData('_visible', false)
+    }
+  }
+
+  return visible
+}
+
+const clearFilter = () => {
+  if (!minder) return
+
+  filterOptions.value = {
+    priorities: [],
+    statuses: [],
+    tag: ''
+  }
+  hasFilter.value = false
+
+  // 显示所有节点
+  const root = minder.getRoot()
+  showAllNodes(root)
+
+  ElMessage.success('过滤已清除')
+}
+
+const showAllNodes = (node) => {
+  if (!node) return
+  node.setData('_visible', true)
+
+  const children = node.getChildren()
+  if (children && children.length > 0) {
+    children.forEach(child => showAllNodes(child))
+  }
+}
+
+// 样式命令处理
+const handleStyleCommand = (command) => {
+  const node = getCurrentNode()
+  if (!node) {
+    ElMessage.warning('请先选择节点')
+    return
+  }
+
+  switch (command) {
+    case 'bold':
+      execCommand('Bold')
+      break
+    case 'italic':
+      execCommand('Italic')
+      break
+    case 'forecolor':
+      colorDialogType.value = 'forecolor'
+      colorDialogTitle.value = '选择文字颜色'
+      colorDialogVisible.value = true
+      break
+    case 'background':
+      colorDialogType.value = 'background'
+      colorDialogTitle.value = '选择背景颜色'
+      colorDialogVisible.value = true
+      break
+    case 'fontsize':
+      fontSizeDialogVisible.value = true
+      break
+    case 'fontfamily':
+      fontFamilyDialogVisible.value = true
+      break
+  }
+}
+
+// 应用颜色
+const applyColor = () => {
+  if (!minder) return
+
+  if (colorDialogType.value === 'forecolor') {
+    minder.execCommand('ForeColor', selectedColor.value)
+  } else if (colorDialogType.value === 'background') {
+    minder.execCommand('Background', selectedColor.value)
+  }
+
+  colorDialogVisible.value = false
+  ElMessage.success('颜色已应用')
+}
+
+// 应用字体大小
+const applyFontSize = () => {
+  if (minder) {
+    minder.execCommand('FontSize', fontSize.value)
+    fontSizeDialogVisible.value = false
+    ElMessage.success('字体大小已应用')
+  }
+}
+
+// 应用字体
+const applyFontFamily = () => {
+  if (minder) {
+    minder.execCommand('FontFamily', fontFamily.value)
+    fontFamilyDialogVisible.value = false
+    ElMessage.success('字体已应用')
+  }
+}
+
+// 图标命令处理
+const handleIconCommand = (command) => {
+  if (!minder) return
+
+  const iconMap = {
+    'priority-0': 'priority',
+    'priority-1': 'priority',
+    'priority-2': 'priority',
+    'priority-3': 'priority',
+    'check': 'progress',
+    'cross': 'progress',
+    'question': 'progress',
+    'star': 'priority'
+  }
+
+  const valueMap = {
+    'priority-0': 0,
+    'priority-1': 1,
+    'priority-2': 2,
+    'priority-3': 3,
+    'check': 5,
+    'cross': 3,
+    'question': 7,
+    'star': 1
+  }
+
+  if (iconMap[command]) {
+    minder.execCommand('Priority', valueMap[command])
+    ElMessage.success('图标已设置')
+  }
+}
+
+// 备注功能
+const showNoteDialog = () => {
+  const node = getCurrentNode()
+  if (!node) return
+
+  const data = getNodeData(node)
+  currentNote.value = data.note || ''
+  noteTab.value = 'markdown'
+  noteDialogVisible.value = true
+}
+
+const saveNote = () => {
+  const node = getCurrentNode()
+  if (!node) return
+
+  setNodeData(node, 'note', currentNote.value)
+  noteDialogVisible.value = false
+  ElMessage.success('备注已保存')
+}
+
+// 返回列表页
+const handleBack = () => {
+  router.push('/manual-testcases/list')
+}
+
+// 保存脑图
+const handleSave = async () => {
+  if (!minder) {
+    ElMessage.warning('脑图未初始化')
+    return
+  }
+
+  try {
+    // 导出脑图数据
+    minderData.value = minder.exportJson()
+
+    const saveData = {
+      name: mindmapName.value,
+      description: mindmapDescription.value,
+      mindmap_data: minderData.value,
+      project_id: 1 // TODO: 从路由或用户选择获取项目ID
+    }
+
+    console.log('准备保存脑图, currentMindmapId:', currentMindmapId.value)
+    console.log('route.query.id:', route.query.id)
+
+    let response
+    if (currentMindmapId.value) {
+      // 更新已有脑图
+      console.log('执行更新操作, ID:', currentMindmapId.value)
+      response = await api.put(`/testcases/manual-mindmaps/${currentMindmapId.value}/`, {
+        name: saveData.name,
+        description: saveData.description,
+        mindmap_data: saveData.mindmap_data
+      })
+      ElMessage.success('脑图更新成功！')
+    } else {
+      // 创建新脑图
+      console.log('执行创建操作')
+      response = await api.post('/testcases/manual-mindmaps/', saveData)
+      currentMindmapId.value = response.data.id
+      ElMessage.success('脑图保存成功！')
+    }
+
+    console.log('保存成功:', response.data)
+  } catch (error) {
+    console.error('保存失败:', error)
+    ElMessage.error('保存失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
+// 导出命令处理
+const handleExportCommand = (command) => {
+  if (!minder) {
+    ElMessage.warning('脑图未初始化')
+    return
+  }
+
+  switch (command) {
+    case 'json':
+      exportAsJson()
+      break
+    case 'png':
+      exportAsPng()
+      break
+    case 'svg':
+      exportAsSvg()
+      break
+    case 'markdown':
+      exportAsMarkdown()
+      break
+    case 'text':
+      exportAsText()
+      break
+  }
+}
+
+// 导出为JSON
+const exportAsJson = () => {
+  minderData.value = minder.exportJson()
+  const dataStr = JSON.stringify(minderData.value, null, 2)
+  const blob = new Blob([dataStr], { type: 'application/json' })
+  downloadFile(blob, `手工用例脑图_${Date.now()}.json`)
+  ElMessage.success('导出JSON成功！')
+}
+
+// 导出为PNG
+const exportAsPng = () => {
+  try {
+    minder.exportData('png').then(data => {
+      const link = document.createElement('a')
+      link.href = data.data
+      link.download = `手工用例脑图_${Date.now()}.png`
+      link.click()
+      ElMessage.success('导出PNG成功！')
+    }).catch(error => {
+      console.error('导出PNG失败:', error)
+      ElMessage.error('导出PNG失败，请重试')
+    })
+  } catch (error) {
+    console.error('导出PNG失败:', error)
+    ElMessage.error('导出PNG失败，请重试')
+  }
+}
+
+// 导出为SVG
+const exportAsSvg = () => {
+  try {
+    const svgData = minder.exportData('svg')
+    const blob = new Blob([svgData.data], { type: 'image/svg+xml' })
+    downloadFile(blob, `手工用例脑图_${Date.now()}.svg`)
+    ElMessage.success('导出SVG成功！')
+  } catch (error) {
+    console.error('导出SVG失败:', error)
+    ElMessage.error('导出SVG失败，请重试')
+  }
+}
+
+// 导出为Markdown
+const exportAsMarkdown = () => {
+  try {
+    const mdData = minder.exportData('markdown')
+    const blob = new Blob([mdData.data], { type: 'text/markdown' })
+    downloadFile(blob, `手工用例脑图_${Date.now()}.md`)
+    ElMessage.success('导出Markdown成功！')
+  } catch (error) {
+    console.error('导出Markdown失败:', error)
+    ElMessage.error('导出Markdown失败，请重试')
+  }
+}
+
+// 导出为纯文本
+const exportAsText = () => {
+  try {
+    const textData = minder.exportData('text')
+    const blob = new Blob([textData.data], { type: 'text/plain' })
+    downloadFile(blob, `手工用例脑图_${Date.now()}.txt`)
+    ElMessage.success('导出文本成功！')
+  } catch (error) {
+    console.error('导出文本失败:', error)
+    ElMessage.error('导出文本失败，请重试')
+  }
+}
+
+// 下载文件辅助方法
+const downloadFile = (blob, filename) => {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+// 导入命令处理
+const handleImportCommand = (command) => {
+  const input = document.createElement('input')
+  input.type = 'file'
+
+  switch (command) {
+    case 'json':
+      input.accept = '.json'
+      input.onchange = importJson
+      break
+    case 'xmind':
+      input.accept = '.xmind'
+      input.onchange = importXMind
+      break
+    case 'markdown':
+      input.accept = '.md,.markdown'
+      input.onchange = importMarkdown
+      break
+  }
+
+  input.click()
+}
+
+// 导入JSON
+const importJson = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = (event) => {
+    try {
+      const data = JSON.parse(event.target.result)
+      minderData.value = data
+      if (minder) {
+        minder.importJson(data)
+      }
+      ElMessage.success('导入JSON成功！')
+    } catch (error) {
+      console.error('导入失败:', error)
+      ElMessage.error('导入失败，文件格式错误！')
+    }
+  }
+  reader.readAsText(file)
+}
+
+// 导入Markdown
+const importMarkdown = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = (event) => {
+    try {
+      if (minder) {
+        minder.importData('markdown', event.target.result)
+      }
+      ElMessage.success('导入Markdown成功！')
+    } catch (error) {
+      console.error('导入失败:', error)
+      ElMessage.error('导入失败，请检查文件格式！')
+    }
+  }
+  reader.readAsText(file)
+}
+
+// 导入XMind
+const importXMind = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  try {
+    ElMessage.info('正在解析XMind文件...')
+
+    // 读取XMind文件（XMind文件是ZIP格式）
+    const arrayBuffer = await file.arrayBuffer()
+    const zip = await JSZip.loadAsync(arrayBuffer)
+
+    // XMind文件包含content.xml（旧版）或content.json（新版）
+    let contentData = null
+
+    // 尝试读取content.json（XMind 2020+）
+    if (zip.files['content.json']) {
+      const jsonContent = await zip.files['content.json'].async('text')
+      contentData = JSON.parse(jsonContent)
+      const minderData = convertXMindJsonToKityMinder(contentData)
+
+      if (minder) {
+        minder.importJson(minderData)
+        ElMessage.success('导入XMind成功！')
+      }
+    }
+    // 尝试读取content.xml（XMind 8及以下）
+    else if (zip.files['content.xml']) {
+      const xmlContent = await zip.files['content.xml'].async('text')
+      const minderData = convertXMindXmlToKityMinder(xmlContent)
+
+      if (minder) {
+        minder.importJson(minderData)
+        ElMessage.success('导入XMind成功！')
+      }
+    } else {
+      throw new Error('不支持的XMind文件格式')
+    }
+
+  } catch (error) {
+    console.error('导入XMind失败:', error)
+    ElMessage.error('导入XMind失败：' + error.message)
+  }
+}
+
+// 转换XMind JSON格式到KityMinder格式
+const convertXMindJsonToKityMinder = (xmindData) => {
+  // XMind 2020+ 使用JSON格式
+  const sheet = xmindData[0] // 第一个sheet
+  const rootTopic = sheet.rootTopic
+
+  const convertTopic = (topic) => {
+    const node = {
+      data: {
+        text: topic.title || '未命名节点'
+      }
+    }
+
+    // 转换标签
+    if (topic.labels && topic.labels.length > 0) {
+      node.data.tags = topic.labels
+    }
+
+    // 转换备注
+    if (topic.notes && topic.notes.plain) {
+      node.data.note = topic.notes.plain.content
+    }
+
+    // 转换优先级（XMind使用1-9，KityMinder使用0-3）
+    if (topic.markers) {
+      const priorityMarker = topic.markers.find(m => m.markerId && m.markerId.includes('priority'))
+      if (priorityMarker) {
+        const priorityNum = parseInt(priorityMarker.markerId.match(/\d+/)?.[0] || '0')
+        // XMind优先级1-3映射到P0-P2
+        if (priorityNum >= 1 && priorityNum <= 3) {
+          node.data.priority = priorityNum - 1
+        }
+      }
+    }
+
+    // 递归转换子节点
+    if (topic.children && topic.children.attached && topic.children.attached.length > 0) {
+      node.children = topic.children.attached.map(child => convertTopic(child))
+    }
+
+    return node
+  }
+
+  return {
+    root: convertTopic(rootTopic)
+  }
+}
+
+// 转换XMind XML格式到KityMinder格式
+const convertXMindXmlToKityMinder = (xmlString) => {
+  // 解析XML
+  const parser = new DOMParser()
+  const xmlDoc = parser.parseFromString(xmlString, 'text/xml')
+
+  // 查找根主题
+  const rootTopic = xmlDoc.querySelector('sheet > topic')
+
+  const convertXmlTopic = (topicElement) => {
+    const node = {
+      data: {
+        text: topicElement.querySelector('title')?.textContent || '未命名节点'
+      }
+    }
+
+    // 转换备注
+    const notes = topicElement.querySelector('notes')
+    if (notes) {
+      const plainContent = notes.querySelector('plain')?.textContent
+      if (plainContent) {
+        node.data.note = plainContent
+      }
+    }
+
+    // 转换标签
+    const labels = topicElement.querySelectorAll('labels > label')
+    if (labels.length > 0) {
+      node.data.tags = Array.from(labels).map(label => label.textContent)
+    }
+
+    // 递归转换子节点
+    const children = topicElement.querySelector('children[type="attached"]')
+    if (children) {
+      const childTopics = children.querySelectorAll(':scope > topic')
+      if (childTopics.length > 0) {
+        node.children = Array.from(childTopics).map(child => convertXmlTopic(child))
+      }
+    }
+
+    return node
+  }
+
+  if (!rootTopic) {
+    throw new Error('无效的XMind XML格式')
+  }
+
+  return {
+    root: convertXmlTopic(rootTopic)
+  }
+}
+
+// 当前正在编辑的输入框
+let currentEditInput = null
+
+// 创建双击编辑的输入框
+const createEditInput = (node) => {
+  if (!node || !minder) return
+
+  // 如果已经有正在编辑的输入框，先保存并移除
+  if (currentEditInput) {
+    currentEditInput.saveAndRemove()
+  }
+
+  const box = node.getRenderBox()
+  const container = document.getElementById('minder-editor')
+
+  // 创建输入框
+  const input = document.createElement('input')
+  input.type = 'text'
+  input.value = node.getText()
+  input.className = 'km-edit-input'
+
+  Object.assign(input.style, {
+    position: 'absolute',
+    left: box.x + 'px',
+    top: box.y + 'px',
+    width: Math.max(box.width + 20, 150) + 'px',
+    height: box.height + 'px',
+    fontSize: '14px',
+    padding: '5px 10px',
+    border: '2px solid #409eff',
+    borderRadius: '4px',
+    outline: 'none',
+    zIndex: '9999',
+    backgroundColor: 'white',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
+  })
+
+  let isSaved = false
+
+  const save = () => {
+    if (isSaved) return
+    isSaved = true
+
+    const newText = input.value.trim()
+    if (newText && newText !== node.getText()) {
+      minder.execCommand('text', newText)
+      nodeText.value = newText
+    }
+
+    if (input.parentNode) {
+      input.remove()
+    }
+    currentEditInput = null
+
+    // 编辑完成后重新聚焦到编辑器
+    setTimeout(() => {
+      const editorElement = document.getElementById('minder-editor')
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 50)
+  }
+
+  const cancel = () => {
+    if (input.parentNode) {
+      input.remove()
+    }
+    currentEditInput = null
+
+    // 取消后重新聚焦到编辑器
+    setTimeout(() => {
+      const editorElement = document.getElementById('minder-editor')
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 50)
+  }
+
+  // 保存引用和方法
+  currentEditInput = {
+    element: input,
+    saveAndRemove: save,
+    cancel: cancel
+  }
+
+  container.appendChild(input)
+  input.focus()
+  input.select()
+
+  let isComposing = false
+
+  // 监听输入法组合事件
+  input.addEventListener('compositionstart', () => {
+    isComposing = true
+  })
+
+  input.addEventListener('compositionend', () => {
+    isComposing = false
+  })
+
+  // 按键事件
+  input.addEventListener('keydown', (e) => {
+    // 如果正在使用输入法组合，不处理Enter
+    if (e.key === 'Enter') {
+      if (!isComposing) {
+        e.preventDefault()
+        e.stopPropagation()
+        save()
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      cancel()
+    }
+  })
+
+  // 失焦时自动保存
+  input.addEventListener('blur', (e) => {
+    // 延迟一点点，确保焦点已经转移
+    setTimeout(() => {
+      if (!isSaved) {
+        save()
+      }
+    }, 100)
+  })
+}
+
+// 编辑节点（用于快捷键调用）
+const editNodeInline = (node) => {
+  createEditInput(node)
+}
+
+// 创建编辑输入框并智能处理输入法
+const createEditInputForTypingWithIME = (node, initialChar = '') => {
+  if (!node || !minder) return null
+
+  // 如果已经有正在编辑的输入框，不再创建
+  if (currentEditInput) {
+    return null
+  }
+
+  const box = node.getRenderBox()
+  const container = document.getElementById('minder-editor')
+
+  // 创建输入框
+  const input = document.createElement('input')
+  input.type = 'text'
+  input.value = initialChar // 设置初始字符
+  input.className = 'km-edit-input'
+
+  Object.assign(input.style, {
+    position: 'absolute',
+    left: box.x + 'px',
+    top: box.y + 'px',
+    width: Math.max(box.width + 20, 150) + 'px',
+    height: box.height + 'px',
+    fontSize: '14px',
+    padding: '5px 10px',
+    border: '2px solid #409eff',
+    borderRadius: '4px',
+    outline: 'none',
+    zIndex: '9999',
+    backgroundColor: 'white',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
+  })
+
+  let isSaved = false
+  let isComposing = false
+
+  const save = () => {
+    if (isSaved) return
+    isSaved = true
+
+    const newText = input.value.trim()
+    if (newText) {
+      minder.execCommand('text', newText)
+      nodeText.value = newText
+    }
+
+    if (input.parentNode) {
+      input.remove()
+    }
+    currentEditInput = null
+
+    // 编辑完成后重新聚焦到编辑器
+    setTimeout(() => {
+      const editorElement = document.getElementById('minder-editor')
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 50)
+  }
+
+  const cancel = () => {
+    if (input.parentNode) {
+      input.remove()
+    }
+    currentEditInput = null
+
+    // 取消后重新聚焦到编辑器
+    setTimeout(() => {
+      const editorElement = document.getElementById('minder-editor')
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 50)
+  }
+
+  // 保存引用和方法
+  currentEditInput = {
+    element: input,
+    saveAndRemove: save,
+    cancel: cancel
+  }
+
+  container.appendChild(input)
+  input.focus()
+  // 将光标移到末尾
+  input.setSelectionRange(input.value.length, input.value.length)
+
+  // 监听输入法组合事件
+  input.addEventListener('compositionstart', () => {
+    isComposing = true
+    // 不清空初始字符，保留它，让输入法自然处理
+  })
+
+  input.addEventListener('compositionend', () => {
+    isComposing = false
+  })
+
+  // 按键事件
+  input.addEventListener('keydown', (e) => {
+    // 如果正在使用输入法组合，不处理Enter和Tab
+    if (e.key === 'Enter') {
+      if (!isComposing) {
+        e.preventDefault()
+        e.stopPropagation()
+        save()
+      }
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      e.stopPropagation()
+      save()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      cancel()
+    }
+  })
+
+  // 失焦时自动保存
+  input.addEventListener('blur', (e) => {
+    setTimeout(() => {
+      if (!isSaved) {
+        save()
+      }
+    }, 100)
+  })
+
+  // 返回输入框元素
+  return input
+}
+
+// 立即创建编辑输入框用于直接输入（支持输入法）
+const createEditInputForTypingImmediate = (node) => {
+  if (!node || !minder) return
+
+  // 如果已经有正在编辑的输入框，不再创建
+  if (currentEditInput) {
+    return
+  }
+
+  const box = node.getRenderBox()
+  const container = document.getElementById('minder-editor')
+
+  // 创建输入框
+  const input = document.createElement('input')
+  input.type = 'text'
+  input.value = '' // 空值，让浏览器自然输入
+  input.className = 'km-edit-input'
+
+  Object.assign(input.style, {
+    position: 'absolute',
+    left: box.x + 'px',
+    top: box.y + 'px',
+    width: Math.max(box.width + 20, 150) + 'px',
+    height: box.height + 'px',
+    fontSize: '14px',
+    padding: '5px 10px',
+    border: '2px solid #409eff',
+    borderRadius: '4px',
+    outline: 'none',
+    zIndex: '9999',
+    backgroundColor: 'white',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
+  })
+
+  let isSaved = false
+
+  const save = () => {
+    if (isSaved) return
+    isSaved = true
+
+    const newText = input.value.trim()
+    if (newText) {
+      minder.execCommand('text', newText)
+      nodeText.value = newText
+    }
+
+    if (input.parentNode) {
+      input.remove()
+    }
+    currentEditInput = null
+
+    // 编辑完成后重新聚焦到编辑器
+    setTimeout(() => {
+      const editorElement = document.getElementById('minder-editor')
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 50)
+  }
+
+  const cancel = () => {
+    if (input.parentNode) {
+      input.remove()
+    }
+    currentEditInput = null
+
+    // 取消后重新聚焦到编辑器
+    setTimeout(() => {
+      const editorElement = document.getElementById('minder-editor')
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 50)
+  }
+
+  // 保存引用和方法
+  currentEditInput = {
+    element: input,
+    saveAndRemove: save,
+    cancel: cancel
+  }
+
+  container.appendChild(input)
+
+  // 立即聚焦，让后续的输入事件能够进入这个输入框
+  input.focus()
+
+  let isComposing = false
+
+  // 监听输入法组合事件
+  input.addEventListener('compositionstart', () => {
+    isComposing = true
+  })
+
+  input.addEventListener('compositionend', () => {
+    isComposing = false
+  })
+
+  // 按键事件
+  input.addEventListener('keydown', (e) => {
+    // 如果正在使用输入法组合，不处理Enter和Tab
+    if (e.key === 'Enter') {
+      if (!isComposing) {
+        e.preventDefault()
+        e.stopPropagation()
+        save()
+      }
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      e.stopPropagation()
+      save()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      cancel()
+    }
+  })
+
+  // 失焦时自动保存
+  input.addEventListener('blur', (e) => {
+    setTimeout(() => {
+      if (!isSaved) {
+        save()
+      }
+    }, 100)
+  })
+}
+
+// 创建编辑输入框用于直接输入
+const createEditInputForTyping = (node, initialChar = '') => {
+  if (!node || !minder) return
+
+  // 如果已经有正在编辑的输入框，不再创建
+  if (currentEditInput) {
+    return
+  }
+
+  const box = node.getRenderBox()
+  const container = document.getElementById('minder-editor')
+
+  // 创建输入框
+  const input = document.createElement('input')
+  input.type = 'text'
+  input.value = initialChar // 设置初始字符
+  input.className = 'km-edit-input'
+
+  Object.assign(input.style, {
+    position: 'absolute',
+    left: box.x + 'px',
+    top: box.y + 'px',
+    width: Math.max(box.width + 20, 150) + 'px',
+    height: box.height + 'px',
+    fontSize: '14px',
+    padding: '5px 10px',
+    border: '2px solid #409eff',
+    borderRadius: '4px',
+    outline: 'none',
+    zIndex: '9999',
+    backgroundColor: 'white',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
+  })
+
+  let isSaved = false
+
+  const save = () => {
+    if (isSaved) return
+    isSaved = true
+
+    const newText = input.value.trim()
+    if (newText) {
+      minder.execCommand('text', newText)
+      nodeText.value = newText
+    }
+
+    if (input.parentNode) {
+      input.remove()
+    }
+    currentEditInput = null
+
+    // 编辑完成后重新聚焦到编辑器
+    setTimeout(() => {
+      const editorElement = document.getElementById('minder-editor')
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 50)
+  }
+
+  const cancel = () => {
+    if (input.parentNode) {
+      input.remove()
+    }
+    currentEditInput = null
+
+    // 取消后重新聚焦到编辑器
+    setTimeout(() => {
+      const editorElement = document.getElementById('minder-editor')
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 50)
+  }
+
+  // 保存引用和方法
+  currentEditInput = {
+    element: input,
+    saveAndRemove: save,
+    cancel: cancel
+  }
+
+  container.appendChild(input)
+  input.focus()
+  // 将光标移到末尾
+  input.setSelectionRange(input.value.length, input.value.length)
+
+  let isComposing = false
+
+  // 监听输入法组合事件
+  input.addEventListener('compositionstart', () => {
+    isComposing = true
+  })
+
+  input.addEventListener('compositionend', () => {
+    isComposing = false
+  })
+
+  // 按键事件
+  input.addEventListener('keydown', (e) => {
+    // 如果正在使用输入法组合，不处理Enter和Tab
+    if (e.key === 'Enter') {
+      if (!isComposing) {
+        e.preventDefault()
+        e.stopPropagation()
+        save()
+      }
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      e.stopPropagation()
+      save()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      cancel()
+    }
+  })
+
+  // 失焦时自动保存
+  input.addEventListener('blur', (e) => {
+    setTimeout(() => {
+      if (!isSaved) {
+        save()
+      }
+    }, 100)
+  })
+}
+
+// 创建编辑输入框并设置初始字符（用于直接输入编辑）
+const createEditInputWithInitialChar = (node, initialChar) => {
+  if (!node || !minder) return
+
+  // 如果已经有正在编辑的输入框，先保存并移除
+  if (currentEditInput) {
+    currentEditInput.saveAndRemove()
+  }
+
+  const box = node.getRenderBox()
+  const container = document.getElementById('minder-editor')
+
+  // 创建输入框
+  const input = document.createElement('input')
+  input.type = 'text'
+  input.value = initialChar // 设置初始字符
+  input.className = 'km-edit-input'
+
+  Object.assign(input.style, {
+    position: 'absolute',
+    left: box.x + 'px',
+    top: box.y + 'px',
+    width: Math.max(box.width + 20, 150) + 'px',
+    height: box.height + 'px',
+    fontSize: '14px',
+    padding: '5px 10px',
+    border: '2px solid #409eff',
+    borderRadius: '4px',
+    outline: 'none',
+    zIndex: '9999',
+    backgroundColor: 'white',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
+  })
+
+  let isSaved = false
+
+  const save = () => {
+    if (isSaved) return
+    isSaved = true
+
+    const newText = input.value.trim()
+    if (newText) {
+      minder.execCommand('text', newText)
+      nodeText.value = newText
+    }
+
+    if (input.parentNode) {
+      input.remove()
+    }
+    currentEditInput = null
+
+    // 编辑完成后重新聚焦到编辑器
+    setTimeout(() => {
+      const editorElement = document.getElementById('minder-editor')
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 50)
+  }
+
+  const cancel = () => {
+    if (input.parentNode) {
+      input.remove()
+    }
+    currentEditInput = null
+
+    // 取消后重新聚焦到编辑器
+    setTimeout(() => {
+      const editorElement = document.getElementById('minder-editor')
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 50)
+  }
+
+  // 保存引用和方法
+  currentEditInput = {
+    element: input,
+    saveAndRemove: save,
+    cancel: cancel
+  }
+
+  container.appendChild(input)
+  input.focus()
+  // 将光标移到末尾
+  input.setSelectionRange(input.value.length, input.value.length)
+
+  let isComposing = false
+
+  // 监听输入法组合事件
+  input.addEventListener('compositionstart', () => {
+    isComposing = true
+  })
+
+  input.addEventListener('compositionend', () => {
+    isComposing = false
+  })
+
+  // 按键事件
+  input.addEventListener('keydown', (e) => {
+    // 如果正在使用输入法组合，不处理Enter和Tab
+    if (e.key === 'Enter') {
+      if (!isComposing) {
+        e.preventDefault()
+        e.stopPropagation()
+        save()
+      }
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      e.stopPropagation()
+      save()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      cancel()
+    }
+  })
+
+  // 失焦时自动保存
+  input.addEventListener('blur', (e) => {
+    setTimeout(() => {
+      if (!isSaved) {
+        save()
+      }
+    }, 100)
+  })
+}
+
+// 更新历史状态（撤销/重做）
+const updateHistoryState = () => {
+  if (!minder) return
+  try {
+    const history = minder.getHistory()
+    if (history) {
+      canUndo.value = history.hasUndo()
+      canRedo.value = history.hasRedo()
+    }
+  } catch (error) {
+    console.log('History not available')
+  }
+}
+
+// 更新剪贴板状态
+const updateClipboardState = () => {
+  if (!minder) return
+  try {
+    const clipboard = minder.getClipboardData()
+    hasClipboard.value = clipboard && clipboard.length > 0
+  } catch (error) {
+    console.log('Clipboard not available')
+  }
+}
+
+// 加载节点数据到详情面板
+const loadNodeDetails = (node) => {
+  if (!node) return
+
+  const data = getNodeData(node)
+
+  // 基本信息
+  nodeText.value = node.getText()
+  currentNodeType.value = data.nodeType || ''
+  currentPriority.value = data.priority !== undefined ? data.priority : null
+  currentStatus.value = data.status || ''
+  currentTags.value = data.tags || []
+
+  // 详细信息
+  nodeData.value = {
+    caseId: data.caseId || '',
+    preCondition: data.preCondition || '',
+    steps: data.steps || '',
+    expect: data.expect || '',
+    remark: data.remark || ''
+  }
+}
+
+// 初始化KityMinder
+// 加载脑图数据
+const loadMindmap = async (id) => {
+  console.log('loadMindmap 被调用, ID:', id)
+  try {
+    const response = await api.get(`/testcases/manual-mindmaps/${id}/`)
+    console.log('loadMindmap 成功获取数据:', response.data)
+    currentMindmapId.value = response.data.id
+    mindmapName.value = response.data.name
+    mindmapDescription.value = response.data.description
+    minderData.value = response.data.mindmap_data
+    console.log('currentMindmapId 已设置为:', currentMindmapId.value)
+    ElMessage.success('加载成功')
+  } catch (error) {
+    console.error('loadMindmap 失败:', error)
+    ElMessage.error('加载失败：' + (error.response?.data?.detail || error.message))
+  }
+}
+
+// 保存事件监听器引用，用于清理
+let keyboardHandler = null
+let editorElementRef = null
+
+// 手动设置键盘快捷键
+const setupKeyboardShortcuts = () => {
+  const editorElement = document.getElementById('minder-editor')
+  if (!editorElement) return
+
+  editorElementRef = editorElement
+
+  keyboardHandler = (e) => {
+    // ========== 最高优先级：系统级按键，完全不拦截 ==========
+    // 所有修饰键（Shift, Ctrl, Alt等）必须直接传递给系统
+    const isModifierKey = e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta' || e.key === 'CapsLock'
+
+    // 所有输入法切换组合键必须直接传递给系统
+    const isIMESwitchKey =
+      (e.ctrlKey && e.key === ' ') ||           // Ctrl+Space（某些输入法）
+      (e.ctrlKey && e.shiftKey) ||              // Ctrl+Shift（某些输入法）
+      (e.altKey && e.shiftKey) ||               // Alt+Shift（Windows语言切换）
+      e.key === 'Process'                       // IME正在处理
+
+    // 如果是系统级按键，完全不处理，直接返回让系统接管
+    if (isModifierKey || isIMESwitchKey) {
+      return
+    }
+
+    // ========== 应用逻辑检查 ==========
+    if (!minder) return
+
+    const selectedNode = minder.getSelectedNode()
+    if (!selectedNode) return
+
+    const isRoot = selectedNode === minder.getRoot()
+
+    // 方向键导航（仅在没有编辑框时）
+    if (!currentEditInput && e.key === 'ArrowUp') {
+      e.preventDefault()
+      // 选中前一个兄弟节点
+      const parent = selectedNode.parent
+      if (parent) {
+        const siblings = parent.children
+        const currentIndex = siblings.indexOf(selectedNode)
+        if (currentIndex > 0) {
+          minder.select(siblings[currentIndex - 1], true)
+        }
+      }
+      return
+    }
+
+    if (!currentEditInput && e.key === 'ArrowDown') {
+      e.preventDefault()
+      // 选中后一个兄弟节点
+      const parent = selectedNode.parent
+      if (parent) {
+        const siblings = parent.children
+        const currentIndex = siblings.indexOf(selectedNode)
+        if (currentIndex < siblings.length - 1) {
+          minder.select(siblings[currentIndex + 1], true)
+        }
+      }
+      return
+    }
+
+    if (!currentEditInput && e.key === 'ArrowLeft') {
+      e.preventDefault()
+      // 选中父节点
+      const parent = selectedNode.parent
+      if (parent && parent !== minder.getRoot().parent) {
+        minder.select(parent, true)
+      }
+      return
+    }
+
+    if (!currentEditInput && e.key === 'ArrowRight') {
+      e.preventDefault()
+      // 选中第一个子节点
+      const children = selectedNode.children
+      if (children && children.length > 0) {
+        minder.select(children[0], true)
+      }
+      return
+    }
+
+    // Tab - 添加子节点（仅在没有编辑框时）
+    if (!currentEditInput && e.key === 'Tab') {
+      e.preventDefault()
+      minder.execCommand('AppendChildNode')
+      return
+    }
+
+    // Enter - 添加同级节点（仅在没有编辑框时）
+    if (!currentEditInput && e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+      e.preventDefault()
+      if (!isRoot) {
+        minder.execCommand('AppendSiblingNode')
+      }
+      return
+    }
+
+    // Delete/Backspace - 删除节点（仅在没有编辑框时）
+    if ((e.key === 'Delete' || e.key === 'Backspace') && !isRoot && !currentEditInput) {
+      e.preventDefault()
+      minder.execCommand('RemoveNode')
+      return
+    }
+
+    // F2 - 编辑节点（仅在没有编辑框时）
+    if (!currentEditInput && e.key === 'F2') {
+      e.preventDefault()
+      editNodeInline(selectedNode)
+      return
+    }
+
+    // Space - 展开/折叠（仅在没有编辑框时）
+    if (e.key === ' ' && !e.ctrlKey && !currentEditInput) {
+      e.preventDefault()
+      const isExpanded = selectedNode.isExpanded()
+      if (isExpanded) {
+        minder.execCommand('Collapse')
+      } else {
+        minder.execCommand('Expand')
+      }
+      return
+    }
+
+    // Ctrl+Z - 撤销（仅在没有编辑框时，编辑框内应该撤销文本输入）
+    if (!currentEditInput && e.ctrlKey && e.key === 'z') {
+      e.preventDefault()
+      try {
+        minder.execCommand('Undo')
+      } catch (err) {
+        console.log('撤销不可用')
+      }
+      return
+    }
+
+    // Ctrl+Y - 重做（仅在没有编辑框时）
+    if (!currentEditInput && e.ctrlKey && e.key === 'y') {
+      e.preventDefault()
+      try {
+        minder.execCommand('Redo')
+      } catch (err) {
+        console.log('重做不可用')
+      }
+      return
+    }
+
+    // Ctrl+C - 复制（仅在没有编辑框时，编辑框内应该复制文本）
+    if (!currentEditInput && e.ctrlKey && e.key === 'c') {
+      e.preventDefault()
+      try {
+        minder.execCommand('Copy')
+        ElMessage.success('已复制')
+      } catch (err) {
+        console.log('复制不可用')
+      }
+      return
+    }
+
+    // Ctrl+X - 剪切（仅在没有编辑框时，编辑框内应该剪切文本）
+    if (!currentEditInput && e.ctrlKey && e.key === 'x' && !isRoot) {
+      e.preventDefault()
+      try {
+        minder.execCommand('Cut')
+        ElMessage.success('已剪切')
+      } catch (err) {
+        console.log('剪切不可用')
+      }
+      return
+    }
+
+    // Ctrl+V - 粘贴（仅在没有编辑框时，编辑框内应该粘贴文本）
+    if (!currentEditInput && e.ctrlKey && e.key === 'v') {
+      e.preventDefault()
+      try {
+        minder.execCommand('Paste')
+        ElMessage.success('已粘贴')
+      } catch (err) {
+        console.log('粘贴不可用')
+      }
+      return
+    }
+
+    // 直接输入字符编辑节点（F2或双击也可以编辑）
+    if (!currentEditInput) {
+      // 排除所有组合键（Ctrl/Alt/Meta）
+      if (!e.ctrlKey && !e.altKey && !e.metaKey) {
+        // 普通可打印字符（排除特殊键）
+        const isCharKey = (e.key.length === 1 || e.key === 'Process') &&
+            e.key !== ' ' &&  // 空格键用于展开/折叠
+            !/^(Shift|Control|Alt|Meta|CapsLock)$/i.test(e.key)
+
+        if (isCharKey) {
+          // 简单策略：直接创建编辑框
+          // 注意：第一个字符可能无法触发中文输入法，用户需要按 F2 或双击来编辑
+          e.preventDefault()
+          editNodeInline(selectedNode)
+          return
+        }
+      }
+    }
+  }
+
+  // 添加键盘事件监听器
+  editorElement.addEventListener('keydown', keyboardHandler)
+
+  console.log('键盘快捷键已设置')
+}
+
+// 清理事件监听器
+const cleanupEventListeners = () => {
+  // 清理键盘事件监听器
+  if (editorElementRef && keyboardHandler) {
+    editorElementRef.removeEventListener('keydown', keyboardHandler)
+    console.log('已移除键盘事件监听器')
+  }
+
+  // 清空所有引用
+  keyboardHandler = null
+  editorElementRef = null
+
+  console.log('所有事件监听器已清理')
+}
+
+const initMinder = () => {
+  if (!window.kityminder) {
+    ElMessage.error('KityMinder库未加载，请刷新页面')
+    return
+  }
+
+  try {
+    const editorElement = document.getElementById('minder-editor')
+
+    // 创建Minder实例
+    minder = new window.kityminder.Minder({
+      renderTo: '#minder-editor'
+    })
+
+    // 导入数据
+    minder.importJson(minderData.value)
+
+    // 设置主题和模板
+    minder.execCommand('Theme', currentTheme.value)
+    minder.execCommand('Template', 'default')
+
+    // 启用编辑
+    minder.enable()
+
+    // 选中根节点
+    const root = minder.getRoot()
+    minder.select(root, true)
+
+    // 居中显示
+    minder.execCommand('camera', root, 600)
+
+    // 不使用 KityMinder 的 Receiver，因为它会全局拦截键盘事件
+    // 包括输入法切换键，导致在整个应用中都无法切换输入法
+    // 我们使用自己的键盘事件处理，只监听特定元素，并且正确放行系统级按键
+    console.log('使用自定义键盘事件监听（放行输入法切换键）')
+    setupKeyboardShortcuts()
+
+    // 聚焦到编辑器容器以确保快捷键能够工作
+    setTimeout(() => {
+      if (editorElement) {
+        editorElement.focus()
+      }
+    }, 200)
+
+    // 监听选中事件
+    minder.on('selectionchange', function() {
+      // 如果有正在编辑的输入框，先保存
+      if (currentEditInput) {
+        currentEditInput.saveAndRemove()
+      }
+
+      const node = minder.getSelectedNode()
+      if (node) {
+        hasSelection.value = true
+        isRootSelected.value = (node === minder.getRoot())
+        loadNodeDetails(node)
+      } else {
+        hasSelection.value = false
+        isRootSelected.value = false
+        nodeText.value = ''
+        currentNodeType.value = ''
+        currentPriority.value = null
+        currentStatus.value = ''
+        currentTags.value = []
+        nodeData.value = {
+          caseId: '',
+          preCondition: '',
+          steps: '',
+          expect: '',
+          remark: ''
+        }
+      }
+    })
+
+    // 监听内容变化
+    minder.on('contentchange', function() {
+      minderData.value = minder.exportJson()
+      // 更新撤销/重做状态
+      updateHistoryState()
+    })
+
+    // 监听双击编辑
+    minder.on('dblclick', function() {
+      const node = minder.getSelectedNode()
+      if (node) {
+        createEditInput(node)
+      }
+    })
+
+    // 监听剪贴板变化
+    minder.on('clipboardchanged', function() {
+      updateClipboardState()
+    })
+
+    // 初始状态更新
+    updateHistoryState()
+    updateClipboardState()
+
+    ElMessage.success('脑图加载成功！双击节点编辑，右侧面板设置属性')
+  } catch (error) {
+    console.error('初始化失败:', error)
+    ElMessage.error('初始化失败: ' + error.message)
+  }
+}
+
+onMounted(async () => {
+  console.log('ManualTestCaseEditor onMounted, route.query:', route.query)
+  // 如果URL中有ID参数，先设置ID并加载脑图数据
+  if (route.query.id) {
+    console.log('检测到 route.query.id:', route.query.id)
+    // 先设置ID，确保即使加载失败也能正确更新而不是创建新脑图
+    currentMindmapId.value = parseInt(route.query.id)
+    console.log('currentMindmapId 预先设置为:', currentMindmapId.value)
+    await loadMindmap(route.query.id)
+  } else {
+    console.log('未检测到 route.query.id，这是一个新脑图')
+  }
+  // 延迟初始化Minder以确保DOM已渲染
+  setTimeout(initMinder, 100)
+})
+
+onUnmounted(() => {
+  // 清理事件监听器
+  cleanupEventListeners()
+
+  // 清理正在编辑的输入框
+  if (currentEditInput) {
+    try {
+      currentEditInput.saveAndRemove()
+    } catch (e) {
+      console.log('清理编辑框失败:', e)
+    }
+  }
+
+  // 清理 minder 实例 - 不调用 destroy，直接清空引用
+  // KityMinder 的 destroy 方法可能有问题，避免错误
+  minder = null
+
+  console.log('ManualTestCaseEditor 组件已卸载')
+})
+</script>
+
+<style scoped>
+.manual-testcase-editor {
+  padding: 0;
+  height: 100%;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+:deep(.el-card) {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.minder-toolbar {
+  padding: 12px;
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.main-content {
+  display: flex;
+  gap: 10px;
+  position: relative;
+}
+
+.minder-container {
+  flex: 1;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #fafafa;
+  transition: all 0.3s ease;
+}
+
+.minder-container.with-panel {
+  width: calc(100% - 420px);
+}
+
+#minder-editor {
+  width: 100%;
+  background-color: #fff;
+  outline: none; /* 移除默认的焦点轮廓 */
+  cursor: default;
+}
+
+#minder-editor:focus {
+  /* 可选：添加自定义的焦点样式 */
+  box-shadow: inset 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.detail-panel {
+  width: 400px;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  background-color: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 280px);
+}
+
+.panel-header {
+  padding: 15px;
+  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #e4e7ed;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.panel-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.panel-content h4 {
+  margin: 20px 0 15px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 1px solid #e4e7ed;
+  padding-bottom: 8px;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+/* 过渡动画 */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-left-enter-from,
+.slide-left-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+/* 滚动条样式 */
+.panel-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.panel-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 备注预览 */
+.note-preview {
+  padding: 15px;
+  min-height: 200px;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  background: #fafafa;
+  line-height: 1.8;
+}
+
+.note-preview h1 {
+  font-size: 24px;
+  margin: 10px 0;
+  color: #333;
+}
+
+.note-preview h2 {
+  font-size: 20px;
+  margin: 8px 0;
+  color: #555;
+}
+
+.note-preview h3 {
+  font-size: 16px;
+  margin: 6px 0;
+  color: #666;
+}
+
+/* 颜色选择器 */
+.color-picker-container {
+  padding: 10px;
+}
+
+.color-presets {
+  margin-top: 20px;
+}
+
+.color-presets h4 {
+  margin: 10px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.color-item {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid #e4e7ed;
+  transition: all 0.2s;
+}
+
+.color-item:hover {
+  transform: scale(1.1);
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
+/* 响应式 */
+@media (max-width: 1400px) {
+  .detail-panel {
+    width: 350px;
+  }
+
+  .minder-container.with-panel {
+    width: calc(100% - 370px);
+  }
+}
+
+@media (max-width: 1200px) {
+  .detail-panel {
+    width: 300px;
+  }
+
+  .minder-container.with-panel {
+    width: calc(100% - 320px);
+  }
+}
+</style>
+
+<style>
+/* 双击编辑输入框全局样式 */
+.km-edit-input {
+  font-family: 'Microsoft YaHei', Arial, sans-serif;
+}
+
+/* KityMinder自定义样式 */
+.km-node[data-priority="0"] text {
+  fill: #f5222d !important;
+  font-weight: bold;
+}
+
+.km-node[data-priority="1"] text {
+  fill: #fa8c16 !important;
+  font-weight: 600;
+}
+
+.km-node[data-priority="2"] text {
+  fill: #fadb14 !important;
+}
+
+.km-node[data-priority="3"] text {
+  fill: #1890ff !important;
+}
+
+.km-node[data-status="pass"] {
+  background-color: #f6ffed;
+}
+
+.km-node[data-status="fail"] {
+  background-color: #fff2f0;
+}
+
+.km-node[data-status="block"] {
+  background-color: #fff7e6;
+}
+</style>
